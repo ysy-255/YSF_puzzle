@@ -1,11 +1,7 @@
 /* [8]game */
 
-easy.removeMovieClip();
-normal.removeMovieClip();
-hard.removeMovieClip();
-white.removeMovieClip();
-start.removeMovieClip();
 
+start.removeMovieClip();
 
 areas = data.map.split('\n');
 
@@ -42,27 +38,38 @@ main.onEnterFrame = function(){
 		if (rooms == complete){
 			var minute = Math.floor(time / 60000);
 			time %= 60000;
-			popUp("complete!!\nクリアタイム：" + ((minute > 0) ? minute + "分" : "") + Math.floor(time / 10) / 100 + " 秒", function(){
-				main.onEnterFrame = null;
-				main.onEnterFrame = function(){
-					// マップ消しましょう
-
-					// 次回ここ進めてね
-				};
-			});
+			popUp("complete!!\nクリアタイム：" + ((minute > 0) ? minute + "分" : "") + (Math.floor(time / 1000)) + " 秒" + Math.floor((time / 100 % 10)), null);
+			main.onEnterFrame = null;
 		}
 	}
 	oldTime = nowTime;
 };
 
+createEmptyMovieClip("timer", 1001);
+timer.createMovieClip("reserve", 0);
+data.myfont.size = 16;
+textBox(timer, "準備中..", width / 24, height / 28 * 23, data.myfont, false);
+data.myfont.size = defaultFontSize;
+timer.onEnterFrame = function(){
+	if (!stopped){
+		var timestr = String(Math.floor(time / 100) / 10);
+		if(timestr.charAt(timestr.length - 2) != '.'){
+			timestr += ".0";
+		}
+		this.label0.text = timestr + "秒";
+	}
+};
+
 
 // もどる
 createEmptyMovieClip("back_game", 9);
-drawRect(back_game, 0, height / 7 * 6, width / 12, height, 1, 0x000000, 0xFFFFFF);
+drawRect(back_game, 0, height / 7 * 6, width / 12, height, 1, LColor, FColor);
+textBox(back_game, "戻ﾙ", width / 24, height / 14 * 13, data.myfont, false);
 back_game.onPress = function(){
 	popUp("前の画面に戻りますか？\n進行状況は破棄されます", function(){
 		_root.allfloors.removeMovieClip();
 		_root.allrooms.removeMovieClip();
+		_root.timer.removeMovieClip();
 		while (floor_switch.length > 0){
 			floor_switch.pop().removeMovieClip();
 		}
@@ -81,7 +88,7 @@ for(_3 in floor_switch){
 	floor_switch[_3].floor = floor;
 	floor_switch[_3]._y = height / 7 * _3;
 	textBox(floor_switch[_3], ["０","１","２","３","４","５"][floor] + "F", width / 24, height / 14, data.myfont, false);
-	drawRect(floor_switch[_3], 0.5, 0, width / 12, height / 7, 0.5, 0x000000, 0xB0FFFF);
+	drawRect(floor_switch[_3], 0.5, 0, width / 12, height / 7, 0.5, LColor, FColor);
 	floor_switch[_3].onPress = function(){
 		nowfloor = this.floor;
 	};
@@ -136,14 +143,14 @@ for(_1 in floors){
 function map_add(parent, type, x1, y1, x2, y2, line_width, color){
 	var offset = 1;
 	if(line_width == 0){
-		parent.lineStyle(0, 0x000000, 0);
+		parent.lineStyle(0, LColor, 0);
 	}
 	else{
-		parent.lineStyle(line_width, 0x000000, 100);
+		parent.lineStyle(line_width, LColor, 100);
 	}
 	switch (type){
 		case 'r':{
-			drawRect(parent, x1, y1, x2, y2, line_width, 0x000000, color);
+			drawRect(parent, x1, y1, x2, y2, line_width, LColor, color);
 			offset += 4;
 			break;
 		}
@@ -221,6 +228,15 @@ allrooms.onEnterFrame = function(){
 		lastfloor = floor;
 	}
 	var color = parseInt(area[1], 16);
+	if(darkmode){
+		var r = (color >> 16) & 0xFF;
+		var g = (color >>  8) & 0xFF;
+		var b = (color >>  0) & 0xFF;
+		r = Math.max(r - 96, 0);
+		g = Math.max(g - 96, 0);
+		b = Math.max(b - 96, 0);
+		color = (r << 16) | (g << 8) | b;
+	}
 	if (area[2] == -1){
 		var offset = 3;
 		while(offset < area.length){
@@ -241,7 +257,7 @@ allrooms.onEnterFrame = function(){
 	}
 	else if (mode > area[2]){
 		if(mode == 4){
-			color = 0xFFFFFF;
+			color = FColor;
 		}
 		rooms ++;
 		var room_num = area[3];
@@ -263,8 +279,8 @@ allrooms.onEnterFrame = function(){
 			var y2 = area[10];
 			var x = (x1 + x2) / 2;
 			var y = (y1 + y2) / 2;
-			room_mc._x = width / 3 * 2 + (width / 3 * Math.random()); // デバッグ後にランダムな場所とする
-			room_mc._y = height * Math.random(); // デバッグ後にランダムな場所とする
+			room_mc._x = width / 3 * 2 + (width / 3 * Math.random());
+			room_mc._y = height * Math.random();
 			room_mc.to_x = x;
 			room_mc.to_y = y;
 			map_add(floors[floor - 1], 'r', x1, y1, x2, y2, 0.5, color);
@@ -368,6 +384,20 @@ allrooms.onEnterFrame = function(){
 	}
 }
 
+createEmptyMovieClip("goresult", 100);
+drawRect(goresult, width / 12 * 11, height / 7 * 6, width, height, 1, LColor, FColor);
+textBox(goresult, "進ﾑ", width / 24 * 23, height / 14 * 13, data.myfont, false);
+goresult.onPress = function(){
+	goresult._visible = true;
+	_root.allfloors.removeMovieClip();
+	_root.allrooms.removeMovieClip();
+	_root.timer.removeMovieClip();
+	while (floor_switch.length > 0){
+		floor_switch.pop().removeMovieClip();
+	}
+	back_game.removeMovieClip();
+	gotoAndPlay("result");
+};
+goresult._visible = false;
 
 stop();
-

@@ -18,14 +18,18 @@ defaultFontSize = 36;
 // 背景色(黒)          : 0
 // データ              : 1
 // メニュー            : 65534
+// メニューダイアログ  : 65535
 // EXIT                : 65537
 // ポップアップ        : 65538
 // 読み込み中          : 5     [2 - 5]
+// 選択されたモード    : 99    [6]
 // モードへ            : 100   [6]
+// 結果へ              : 100   [8]
 // タイトル            : 110   [6]
 // モード              : 101 - 104  [7]
 // ゲームスタート      : 150   [7]
 // main                : 1000  [8]
+// timer               : 1001  [8]
 // マップ管理          : 200   [8]
 // 1階 - 5階           : 201 - 205 [8] 
 // 部屋                : 1100 - 2300 [8]
@@ -60,6 +64,28 @@ function drawRect(parent, x1, y1, x2, y2, line_width, line_color, fill_color){
 };
 
 
+darkmode = false;
+LColor = 0x000000;
+FColor = 0xFFFFFF;
+BackGround = createEmptyMovieClip("bg0", 0);
+drawRect(BackGround, -10, -10, width + 10, height + 10, 0, 0, 0x000000);
+wb = function(){
+	if(darkmode){
+		bg0._visible = true;
+		LColor = 0xFFFFFF;
+		FColor = 0x000000;
+	}
+	else{
+		bg0._visible = false;
+		LColor = 0x000000;
+		FColor = 0xFFFFFF;
+	}
+	data.myfont.color = LColor;
+	format_temp.color = LColor;
+};
+bg0.onEnterFrame = wb;
+
+
 function textBox(parent, text, x, y, format, box){
 	var tf = parent.createTextField("label" + parent.getNextHighestDepth(), parent.getNextHighestDepth(), 0, 0, width, height);
 	tf.setNewTextFormat(format);
@@ -77,8 +103,9 @@ function textBox(parent, text, x, y, format, box){
 	tf._width = text_width;
 	tf._height = text_height;
 	if(box){
-		drawRect(parent, x, y, x + text_width, y + text_height, 0.5, 0x000000, 0xFFFFFF);
+		drawRect(parent, x, y, x + text_width, y + text_height, 0.5, LColor, FColor);
 	}
+	return parent.getNextHighestDepth();
 };
 
 
@@ -103,8 +130,8 @@ function popUp(text, yes_func){
 	var pop = _root.createEmptyMovieClip("popUp", 65538);
 	pop._x = twidth * 3;
 	pop._y = theight * 2;
-	drawRect(pop, 0, 0, twidth * 2, theight * 1, 0.5, 0x000000, 0xFFFFFF);
-	drawRect(pop, 0, 0, twidth * 2, 10, 0.5, 0x000000, 0xC0C0C0);
+	drawRect(pop, 0, 0, twidth * 2, theight * 1, 0.5, LColor, FColor);
+	drawRect(pop, 0, 0, twidth * 2, 10, 0.5, LColor, 0xC0C0C0);
 
 	pop.createEmptyMovieClip("quit", 10);
 	quitButton(pop.quit, twidth * 2, 0, function(){
@@ -137,12 +164,6 @@ function popUp(text, yes_func){
 	format_temp.size = defaultFontSize;
 };
 
-// 隠し要素でもいいので作りたいダークモード
-BackGround = createEmptyMovieClip("bg0", 0);
-drawRect(BackGround, -10, -10, width + 10, height + 10, 0, 0, 0xFFFFFF);
-
-// なにかメニューとか設定作りたくなったら付け足す
-menu = createEmptyMovieClip("menu", 65534);
 
 // 右上のやつ          ↓Closeじゃないの？
 createEmptyMovieClip("quit", 65537);

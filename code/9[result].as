@@ -1,0 +1,3 @@
+goresult.removeMovieClip();
+
+stop();
