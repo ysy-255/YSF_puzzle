@@ -27,12 +27,12 @@ gomode.onPress = function(){
 	};
 	drawRect(smode, 0, -4, width / 5, height / 6 + 4, 1, 0x00C000, FColor);
 	for (i in modes){
-		modes[i] = createEmptyMovieClip(["easy", "normal", "hard", "white"][i], 101 + i);
+		modes[i] = createEmptyMovieClip(["easy", "normal", "hard", "insane"][i], 101 + i);
 		modes[i]._x = width / 10 * (1 + i * 2);
 		modes[i]._y = height / 12 * 5;
 		modes[i].mode = Number(i) + 1;
 		drawRect(modes[i], 4, 0, width / 5 - 4, height / 6, 0.5, LColor, FColor);
-		textBox(modes[i], ["一般向け", "生徒向け", "ぜんぶ", "::white::"][i], width / 10, height / 12, data.myfont, false);
+		textBox(modes[i], ["一般向け", "生徒向け", "ぜんぶ", (darkmode ? "::black" : "::white::")][i], width / 10, height / 12, data.myfont, false);
 		modes[i].onPress = function(){
 			mode = this.mode;
 		};
@@ -86,12 +86,12 @@ setting.onPress = function(){
 		if(darkmode){
 			darkmode = false;
 			this.label0.text = "ダークモード：OFF";
-			white.label0.text = "::white::";
+			insane.label0.text = "::white::";
 		}
 		else{
 			darkmode = true;
 			this.label0.text = "ダークモード： ON";
-			white.label0.text = "::black::";
+			insane.label0.text = "::black::";
 		}
 		wb();
 		this.label0.backgroundColor = FColor;
@@ -101,7 +101,7 @@ setting.onPress = function(){
 		easy.label0.textColor = LColor;
 		normal.label0.textColor = LColor;
 		hard.label0.textColor = LColor;
-		white.label0.textColor = LColor;
+		insane.label0.textColor = LColor;
 		start.label0.textColor = LColor;
 		for(i in modes){
 			drawRect(modes[i], 4, 0, width / 5 - 4, height / 6, 0.5, LColor, FColor);
@@ -111,7 +111,5 @@ setting.onPress = function(){
 	}
 }
 
-// デフォルトのモード
-mode = "no";
 
 stop();

@@ -25,6 +25,7 @@ defaultFontSize = 36;
 // 選択されたモード    : 99    [6]
 // モードへ            : 100   [6]
 // 結果へ              : 100   [8]
+// ランキング          : 100   [9]
 // タイトル            : 110   [6]
 // モード              : 101 - 104  [7]
 // ゲームスタート      : 150   [7]
@@ -37,6 +38,8 @@ defaultFontSize = 36;
 
 //                      ↑いやそんなに被らず置くなら深度管理の意味なくない？それ
 
+// デフォルトのモード
+mode = "no";
 
 // font.swf からフォントを読み込むまでこれ使う
 format_temp = new TextFormat();
@@ -169,6 +172,39 @@ function popUp(text, yes_func){
 createEmptyMovieClip("quit", 65537);
 quitButton(quit, width, 0, function(){
 	popUp("進行状況を破棄して\nゲームを終了しますか？", function(){
+		var shared_obj = SharedObject.getLocal("YSF_puzzle", "/");
+		shared_obj.data.state = "quit";
+		shared_obj.data.value = String(Math.random());
+		shared_obj.flush();
 		getURL("FSCommand:" add "quit",0);
 	});
 });
+
+
+
+function timeconvert(time_){
+	var text = "";
+	var minute = String(Math.floor(time_ / 60000));
+	if(minute == "0"){
+		text += "  　";
+	}
+	else{
+		if(minute.length == 1){
+			minute = " " + minute;
+		}
+		text += minute;
+		text += "分";
+	}
+	var second = String(Math.floor(time_ / 1000) % 60);
+	if(second.length == 1){
+		text += " ";
+	}
+	text += second;
+	text += "秒";
+	var decimal = String(Math.floor(time_ / 10) % 100);
+	if(decimal.length == 1){
+		decimal = '0' + decimal;
+	}
+	text += decimal;
+	return text;
+};

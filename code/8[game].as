@@ -36,9 +36,8 @@ main.onEnterFrame = function(){
 	else{
 		time += nowTime - oldTime;
 		if (rooms == complete){
-			var minute = Math.floor(time / 60000);
-			time %= 60000;
-			popUp("complete!!\nクリアタイム：" + ((minute > 0) ? minute + "分" : "") + (Math.floor(time / 1000)) + " 秒" + Math.floor((time / 100 % 10)), null);
+			popUp("complete!!\nクリアタイム：" + timeconvert(time), null);
+			goresult._visible = true;
 			main.onEnterFrame = null;
 		}
 	}
