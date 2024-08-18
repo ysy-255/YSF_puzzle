@@ -223,7 +223,7 @@ int main(){
 					sharedObjectWriter();
 				}
 				else if(state == "nick"){
-					std::system("start /MAX FlashPlayer10.exe registar_helper.exe");
+					std::system("start /MAX FlashPlayer10.exe register_helper.swf");
 				}
 				else if(state == "quit"){
 					return 0;
