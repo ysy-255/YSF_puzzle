@@ -36,6 +36,7 @@ main.onEnterFrame = function(){
 	else{
 		time += nowTime - oldTime;
 		if (rooms == complete){
+			data.tereen.start();
 			popUp("complete!!\nクリアタイム：" + timeconvert(time), null);
 			goresult._visible = true;
 			main.onEnterFrame = null;
@@ -45,7 +46,7 @@ main.onEnterFrame = function(){
 };
 
 createEmptyMovieClip("timer", 1001);
-timer.createMovieClip("reserve", 0);
+timer.createMovieClip("reserve", 10);
 data.myfont.size = 16;
 textBox(timer, "準備中..", width / 24, height / 28 * 23, data.myfont, false);
 data.myfont.size = defaultFontSize;
@@ -92,7 +93,13 @@ for(_3 in floor_switch){
 		nowfloor = this.floor;
 	};
 }
-
+listener.onKeyDown = function(){
+	var Key = Key.getCode();
+	if(49 <= Key && Key <= 53){
+		nowfloor = Key - 48;
+	}
+};
+Key.addListener(listener);
 
 var allfloors = createEmptyMovieClip("allfloors", 200);
 allfloors._x = width / 6;
@@ -319,6 +326,7 @@ allrooms.onEnterFrame = function(){
 			var dx = (this._x - allfloors._x) * 100 / zoom - this.to_x;
 			var dy = (this._y - allfloors._y) * 100 / zoom - this.to_y;
 			if (this.floor == nowfloor &&dx * dx + dy * dy < 2500){
+				data.koteltu.start();
 				this._x = this.to_x;
 				this._y = this.to_y;
 				this.onPress = null;
