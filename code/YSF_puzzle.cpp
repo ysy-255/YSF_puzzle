@@ -209,6 +209,7 @@ int main(){
 	sharedObjectPath += sharedObjectName + ".sol";
 	HANDLE handles[3] = {hDir, pi.hProcess, NULL};
 	short handlesnum = 2;
+	std::string laststate;
 	while(true){
 		DWORD dwWaitStatus = WaitForMultipleObjects(handlesnum, handles, FALSE, INFINITE);
 		switch(dwWaitStatus){
@@ -225,7 +226,7 @@ int main(){
 					writeRanking();
 					sharedObjectWriter("data", ranking_data());
 				}
-				else if(state == "nick"){
+				else if(state == "nick" && laststate != "nick"){
 					STARTUPINFOA si_h = {sizeof(STARTUPINFOA)};
 					PROCESS_INFORMATION pi_h;
 					si_h.dwFlags = STARTF_USESHOWWINDOW;
@@ -267,5 +268,6 @@ int main(){
 				break;
 			}
 		}
+		laststate = state;
 	}
 }

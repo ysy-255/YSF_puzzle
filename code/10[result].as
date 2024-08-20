@@ -1,5 +1,7 @@
 goresult.removeMovieClip();
 
+var mode2 = mode;
+
 shared_obj = SharedObject.getLocal("YSF_puzzle", "/");
 if(shared_obj){
 	shared_obj.data.state = "ranking";
@@ -69,7 +71,7 @@ register.onPress = function(){
 		popUp("登録してよろしいですか？", function(){
 			rank.register.onPress = null;
 			var text = "";
-			var modename = ["easy", "normal", "hard", "insane"][mode - 1];
+			var modename = ["easy", "normal", "hard", "insane"][mode2 - 1];
 			text += String(modename.length);
 			text += modename;
 			text += String(name.length).length;
@@ -149,8 +151,26 @@ rank.onEnterFrame = function(){
 		data.myfont.align = "center";
 		this.label8._y = 48;
 		this.label8.autoSize = "left";
+		var scrollbar = (this.label8._height + 48 - height > 0);
+		scroll._visible = scrollbar;
+		if(scrollbar){
+			scroll._yscale = (height - 48) * 100 / this.label8._height;
+		}
 	}
+	scroll._x = 0;
+	scroll._y = Math.min(height - scroll._height * scroll._yscale / 100 - 48, Math.max(0, scroll._y));
+	this.label8._y = - scroll._y / (height - (scroll._height * scroll._yscale / 100) - 48) * (this._height - height + 48) + 48;
 }
+
+var scroll = createEmptyMovieClip("scroll", 110);
+drawRect(scroll, width - 16, 48, width, height, 0.5, LColor, FColor);
+scroll.onPress = function(){
+	this.startDrag (false);
+};
+scroll.onRelease = function(){
+	stopDrag ();
+};
+
 
 var smode = createEmptyMovieClip("selected_mode", 99);
 smode._x = - width;
