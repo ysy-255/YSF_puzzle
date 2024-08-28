@@ -10,7 +10,7 @@
 
 #include "FILE.hpp"
 
-std::string sharedObjectPath = "C:\\Users\\haru1\\AppData\\Roaming\\Macromedia\\Flash Player\\#SharedObjects\\";
+std::string sharedObjectPath = "C:\\Users\\students\\AppData\\Roaming\\Macromedia\\Flash Player\\#SharedObjects\\";
 std::string sharedObjectName = "YSF_Puzzle";
 
 std::string rankingPath = "./data/rank.dat";

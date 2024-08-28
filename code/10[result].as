@@ -41,6 +41,7 @@ textBox(rank, "ニックネーム：", width / 6, height / 21 * 10, data.myfont,
 nickname = rank.createEmptyMovieClip("nickname", rank.getNextHighestDepth());
 textBox(nickname, "ここをクリック", width / 6, height / 21 * 11, data.myfont, true);
 nickname.onPress = function(){
+	getURL("FSCommand:" add "fullscreen", "false");
 	shared_obj.data.state = "nick";
 	shared_obj.data.value = String(Math.random());
 	shared_obj.flush();
@@ -133,12 +134,15 @@ rank.onEnterFrame = function(){
 		this.label8.removeTextField();
 		this.mode = mode;
 		var vecSize = this.data[mode - 1].length;
-		var text = "------------------------------------------------\n|クリアタイム| ニックネーム      \n------------------------------------------------";
+		var text = "------------------------------------------------\n|順位|クリアタイム| ニックネーム      \n------------------------------------------------";
 		var _ = 0;
-		for(; _ < vecSize; _++){
+		for (; _ < vecSize; _++){
+			var jyunni = Number(_) + 1; if(jyunni < 10) jyunni = ' ' + jyunni;
 			var score = this.data[mode - 1][_][0];
 			var name = this.data[mode - 1][_][1];
 			text += "\n| ";
+			text += jyunni;
+			text += " | ";
 			text += timeconvert(score);
 			text += " | ";
 			text += name;
@@ -154,18 +158,18 @@ rank.onEnterFrame = function(){
 		var scrollbar = (this.label8._height + 48 - height > 0);
 		scroll._visible = scrollbar;
 		if(scrollbar){
-			scroll._yscale = (height - 48) * 100 / this.label8._height;
+			scroll._yscale = (height - 48) * (height - 48) / this.label8._height / height * 100;
+			scroll._y = Math.min(scroll._y, height * (1 - scroll._yscale / 100));
 		}
 	}
-	scroll._x = 0;
-	scroll._y = Math.min(height - scroll._height * scroll._yscale / 100 - 48, Math.max(0, scroll._y));
-	this.label8._y = - scroll._y / (height - (scroll._height * scroll._yscale / 100) - 48) * (this._height - height + 48) + 48;
-}
+	this.label8._y = - (scroll._y - 48) / ((height * (1 - scroll._yscale / 100)) - 48) * (this._height - height + 48) + 48;
+};
 
 var scroll = createEmptyMovieClip("scroll", 110);
-drawRect(scroll, width - 16, 48, width, height, 0.5, LColor, FColor);
+drawRect(scroll, width - 16, 0, width, height, 0.5, LColor, FColor);
+scroll._y = 48;
 scroll.onPress = function(){
-	this.startDrag (false);
+	this.startDrag (false, 0, 48, 0, height * (1 - this._yscale / 100));
 };
 scroll.onRelease = function(){
 	stopDrag ();

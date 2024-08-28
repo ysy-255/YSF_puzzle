@@ -95,6 +95,7 @@ function textBox(parent, text, x, y, format, box){
 	tf.setNewTextFormat(format);
 	tf.text = text;
 	tf.autoSize = "center";
+	tf.embedFonts = true;
 	if(text.split('\n').length > 1){
 		tf.multiline = true;
 	}
