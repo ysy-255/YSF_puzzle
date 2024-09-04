@@ -70,6 +70,7 @@ back_game.onPress = function(){
 		_root.allfloors.removeMovieClip();
 		_root.allrooms.removeMovieClip();
 		_root.timer.removeMovieClip();
+		_root.sfloor.removeMovieClip();
 		while (floor_switch.length > 0){
 			floor_switch.pop().removeMovieClip();
 		}
@@ -80,6 +81,21 @@ back_game.onPress = function(){
 
 
 nowfloor = 1;
+
+
+var sfloor = createEmptyMovieClip("selected_floor", 310);
+sfloor._x = 0;
+sfloor._y = - height;
+sfloor.onEnterFrame = function(){
+	if(this._y < 0) this._y = floor_switch[nowfloor - 1]._y;
+	this._y -= (this._y - floor_switch[nowfloor - 1]._y) / 3;
+};
+sfloor.lineStyle(1, 0x00C000, 100);
+sfloor.moveTo(4, 4);
+sfloor.lineTo(width / 12 - 4, 4);
+sfloor.lineTo(width / 12 - 4, height / 7 - 4);
+sfloor.lineTo(4, height / 7 - 4);
+sfloor.lineTo(4, 4);
 
 floor_switch = new Array(0, 0, 0, 0, 0);
 for(_3 in floor_switch){
@@ -129,8 +145,7 @@ allfloors.onEnterFrame = function(){
 	}
 };
 
-floors = new Array(0,0,0,0,0);
-
+floors = new Array(0, 0, 0, 0, 0);
 for(_1 in floors){
 	var floor = (Number(_1) + 1);
 	floors[_1] = allfloors.createEmptyMovieClip("floor_" + floor, 201 + Number(_1));
@@ -399,6 +414,7 @@ goresult.onPress = function(){
 	_root.allfloors.removeMovieClip();
 	_root.allrooms.removeMovieClip();
 	_root.timer.removeMovieClip();
+	_root.sfloor.removeMovieClip();
 	while (floor_switch.length > 0){
 		floor_switch.pop().removeMovieClip();
 	}

@@ -8,12 +8,13 @@
 
 #include <windows.h>
 
+#include "charset_convert.hpp"
 #include "FILE.hpp"
 
-std::string sharedObjectPath = "C:\\Users\\students\\AppData\\Roaming\\Macromedia\\Flash Player\\#SharedObjects\\";
+std::string sharedObjectPath = "\\Macromedia\\Flash Player\\#SharedObjects\\";
 std::string sharedObjectName = "YSF_Puzzle";
 
-std::string rankingPath = "./data/rank.dat";
+std::string rankingPath = utf8_to_shiftjis("../ゲーム/YSF_puzzle/data/rank.dat");
 
 std::map<std::string/* 難易度名 */, std::vector<std::pair<int /* スコア */, std::string /* 名前 */>>> ranking;
 std::string state;
@@ -22,7 +23,8 @@ std::vector<unsigned char> valuestream;
 std::vector<unsigned char> file_to_datastream(std::string path){
 	std::ifstream File(path,  std::ios::binary | std::ios::ate);
 	if(!File.is_open()){
-		std::cerr << (File.eof() ? "EOF " : "") << (File.fail() ? "FAIL " : "") << (File.bad() ? "BAD " : "") << std::endl;
+		printf("ファイルを開けませんでした。%s (%s%s%s)", path.c_str(), (File.eof() ? "EOF " : ""), (File.fail() ? "FAIL " : ""), (File.bad() ? "BAD " : ""));
+		return {};
 	}
 	int FileSize = File.tellg();
 	File.seekg(0);
@@ -31,7 +33,7 @@ std::vector<unsigned char> file_to_datastream(std::string path){
 	return datastream;
 }
 
-char charLength(const unsigned char c){
+char charLength(const unsigned char & c){
 	if((c & 0x80) == 0) return 1;
 	else if(0xC2 <= c && c <= 0xDF) return 2;
 	else if(0xE0 <= c && c <= 0xEF) return 3;
@@ -114,11 +116,12 @@ void readRanking(){
 			ranking[mode].push_back(std::make_pair(score, name));
 		}
 	}
+	return;
 }
 
 void writeRanking(){
 	std::ofstream out(rankingPath);
-	auto rankdata = ranking_data();
+	std::vector<unsigned char> rankdata = ranking_data();
 	out.write(reinterpret_cast<char*>(rankdata.data()), rankdata.size());
 	return;
 }
@@ -182,40 +185,95 @@ void valuestream_register(){
 	return;
 }
 
+DWORD ProcessId; // このプログラムが終了するときに終了するプロセス(puzzle.exe)
+
+void changeMainHandle(const HWND & hWnd){
+	std::ofstream ysfjk_hWnd(utf8_to_shiftjis("../ゲーム/YSF_puzzle/MainWindowHandle.ysfjk"));
+	ysfjk_hWnd << "MainWindowHandle=";
+	ysfjk_hWnd << reinterpret_cast<uint64_t>(hWnd);
+	ysfjk_hWnd << "\nProcessIds=";
+	ysfjk_hWnd << ProcessId;
+	std::ofstream ysfjk_changeFlag(utf8_to_shiftjis("../ゲーム/YSF_puzzle/ChangeMainWindow.ysfjk"));
+	ysfjk_hWnd.close();
+	ysfjk_changeFlag.close();
+	return;
+}
+
+HWND mainHWnd = NULL; // その時点でのメインウィンドウ
+
+BOOL CALLBACK EnumPIDtoHWnd(HWND hWnd, LPARAM lParam){
+	DWORD processId;
+	GetWindowThreadProcessId(hWnd, &processId);
+	if(processId == lParam){
+		mainHWnd = hWnd;
+		ShowWindow(hWnd, SW_MAXIMIZE);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+void changeMainByPI(PROCESS_INFORMATION & pi){
+	WaitForInputIdle(pi.hProcess, 10000);
+	EnumWindows(EnumPIDtoHWnd, pi.dwProcessId);
+	if(mainHWnd == NULL){
+		puts("ハンドルを入手できませんでした");
+	}
+	else changeMainHandle(mainHWnd);
+	return;
+}
+
+#include <shlobj.h> // C:/Users/{username}/AppData/Roaming を取得するため
 int main(){
-	STARTUPINFOA si = {sizeof(STARTUPINFOA)};
+	SetConsoleOutputCP(CP_UTF8);
+	SetConsoleCP(CTRY_JAPAN);
+	STARTUPINFOA si;
+	memset(&si, 0, sizeof(si));
 	si.cb = sizeof(si);
 	PROCESS_INFORMATION pi;
-	if(!CreateProcessA(NULL, const_cast<char*>("FlashPlayer10.exe puzzle.swf"),NULL,NULL,false,0,NULL,NULL,&si,&pi)){
-		std::cerr << "err[4]\n";
+	std::string mycommand = utf8_to_shiftjis("FlashPlayer10.exe ../ゲーム/YSF_puzzle/puzzle.swf");
+	if(!CreateProcessA(NULL, const_cast<char*>(mycommand.c_str()),NULL,NULL,false,0,NULL,NULL,&si,&pi)){
+		puts("puzzle.exe の生成に失敗しました。");
 		return 1;
 	}
+	ProcessId = pi.dwProcessId;
+	changeMainByPI(pi);
+
+	// shareObjectのパスを取得したい！
+	CHAR AppDataPath[MAX_PATH];
+	SHGetSpecialFolderPathA(NULL, AppDataPath, CSIDL_APPDATA, 0);
+	sharedObjectPath = std::string(AppDataPath) + sharedObjectPath;
 	auto directry = std::filesystem::directory_iterator(sharedObjectPath);
 	for(auto & i : directry){
 		sharedObjectPath = i.path().string();
 		break;
 	}
 	sharedObjectPath += "\\localhost\\";
-    HANDLE hDir = FindFirstChangeNotificationA(
-        sharedObjectPath.c_str(),     // 監視するディレクトリの完全パス
-        FALSE,                        // 指定したディレクトリのみ
-        FILE_NOTIFY_CHANGE_LAST_WRITE // ファイルの更新時
-    );
+	HANDLE hDir = FindFirstChangeNotificationA(
+		sharedObjectPath.c_str(),     // 監視するディレクトリの完全パス
+		FALSE,                        // 指定したディレクトリのみ
+		FILE_NOTIFY_CHANGE_LAST_WRITE // ファイルの更新時
+	);
 	if(hDir == INVALID_HANDLE_VALUE){
-		std::cerr << "err[1]\n";
+		puts("SharedObjectの監視に失敗しました:");
 		puts(sharedObjectPath.c_str());
 		return 1;
 	}
 	sharedObjectPath += sharedObjectName + ".sol";
-	HANDLE handles[3] = {hDir, pi.hProcess, NULL};
-	short handlesnum = 2;
-	std::string laststate;
+	printf("SharedObject : %s\n", sharedObjectPath.c_str());
+	
+	HANDLE handles[2] = {hDir, pi.hProcess};
+	std::string laststate; // デバウンス用
 	while(true){
-		DWORD dwWaitStatus = WaitForMultipleObjects(handlesnum, handles, FALSE, INFINITE);
+		DWORD dwWaitStatus = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
 		switch(dwWaitStatus){
 			case WAIT_OBJECT_0:{
 				sharedObjectReader();
-				std::cerr << "state :" << state << std::endl;
+				printf("state : %s", state.c_str());
+				if(state != "data"){
+					printf(", value : ");
+					for(unsigned char & c : valuestream) putchar(c);
+				}
+				puts("");
 				if(state == "ranking"){
 					readRanking();
 					sharedObjectWriter("data", ranking_data());
@@ -227,43 +285,81 @@ int main(){
 					sharedObjectWriter("data", ranking_data());
 				}
 				else if(state == "nick" && laststate != "nick"){
-					STARTUPINFOA si_h = {sizeof(STARTUPINFOA)};
-					PROCESS_INFORMATION pi_h;
-					si_h.dwFlags = STARTF_USESHOWWINDOW;
-					si_h.wShowWindow = SW_MAXIMIZE;
-					if(!CreateProcessA(NULL, const_cast<char*>("FlashPlayer10.exe register_helper.swf"),NULL,NULL,false,0,NULL,NULL,&si_h,&pi_h)){
-						std::cerr << "err[5]\n";
-						return 1;
-					}
-					handles[2] = pi_h.hProcess;
-					handlesnum = 3;
+					HWND hWnd = GetConsoleWindow();
+					ShowWindow(hWnd, SW_MAXIMIZE);
+					LONG style = GetWindowLong(hWnd, GWL_STYLE);
+					SetWindowLong(hWnd, GWL_STYLE, style & ~WS_OVERLAPPEDWINDOW); // 全画面準備
+					SetWindowPos(mainHWnd, HWND_NOTOPMOST, 0, 0, 0, 0, 0); // .swf最上位やめ
+					SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW); // 最上位を.exeに
+					SetForegroundWindow(hWnd); // .exeをアクティブに
+					MoveWindow(
+						hWnd,
+						GetSystemMetrics(SM_XVIRTUALSCREEN),
+						GetSystemMetrics(SM_YVIRTUALSCREEN),
+						GetSystemMetrics(SM_CXVIRTUALSCREEN),
+						GetSystemMetrics(SM_CYVIRTUALSCREEN),
+						TRUE
+					); // 全画面表示
+					changeMainHandle(hWnd);
+
+					std::string nickname;
+					bool flag;
+					do{
+						flag = false;
+						puts("クリックして名前を入力してEnterを押してください。");
+						std::cin >> nickname;
+						nickname = shiftjis_to_utf8(nickname);
+						if(stringLength(nickname) == 1){
+							puts("短すぎます");
+							flag = true;
+						}
+						if(stringLength(nickname) > 20){
+							puts("長すぎます");
+							flag = true;
+						}
+						if(nickname == "名前"){
+							std::string S;
+							puts("名前を名前にしたいですか？[Y/n]");
+							std::cin >> S;
+							flag = (S != "Y" && S != "y");
+						}
+						if(nickname == "クリックして名前"){
+							std::string S;
+							puts("　を入力してください(\?\?\?)");
+							puts("名前をクリックして名前にしたいですか？[Y/n]");
+							std::cin >> S;
+							flag = (S != "Y" && S != "y");
+						}
+					}while(flag);
+					valuestream.clear();
+					valuestream.reserve(nickname.size());
+					for(unsigned char c : nickname) valuestream.push_back(c);
+					sharedObjectWriter("return", valuestream);
+
+					SetWindowLong(hWnd, GWL_STYLE, style); // 全画面終わり
+					SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, 0); // .exe最上位やめ
+					SetWindowPos(mainHWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW); // 最上位を.swfに
+					SetForegroundWindow(mainHWnd); // .swfをアクティブに
+					changeMainByPI(pi);
 				}
 				else if(state == "quit"){
-					std::cerr << "quit\n";
+					puts("quit");
 					return 0;
 				}
 				if(!FindNextChangeNotification(hDir)){
-					std::cerr << "err[3]\n";
+					puts("couldn't make NextChangeNotification");
 					return 1;
 				}
 				break;
 			}
 			case WAIT_OBJECT_0 + 1:{
+				puts("quit from swf");
 				return 0;
 				break;
 			}
-			case WAIT_OBJECT_0 + 2:{
-				sharedObjectReader();
-				if(state == "nick"){
-					sharedObjectWriter("return", {'n', 'o', 'n', 'a', 'm', 'e'});
-				}
-				handles[2] = NULL;
-				handlesnum = 2;
-				break;
-			}
 			default:{
-				std::cerr << "err[2]\n";
-				std::cerr <<GetLastError();
+				puts("err in wait_object loop");
+				printf("%ld\n", GetLastError());
 				return 1;
 				break;
 			}

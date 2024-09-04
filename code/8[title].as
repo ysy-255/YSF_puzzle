@@ -31,8 +31,9 @@ gomode.onPress = function(){
 		modes[i]._x = width / 10 * (1 + i * 2);
 		modes[i]._y = height / 12 * 5;
 		modes[i].mode = Number(i) + 1;
+		// if (modes[i].mode == 1) modes[i].mode = 0;
 		drawRect(modes[i], 4, 0, width / 5 - 4, height / 6, 0.5, LColor, FColor);
-		textBox(modes[i], ["一般向け", "生徒向け", "ぜんぶ", (darkmode ? "::black" : "::white::")][i], width / 10, height / 12, data.myfont, false);
+		textBox(modes[i], ["一般向け", "生徒向け", "ぜんぶ", (darkmode ? "::black::" : "::white::")][i], width / 10, height / 12, data.myfont, false);
 		modes[i].onPress = function(){
 			mode = this.mode;
 		};
@@ -48,6 +49,7 @@ gomode.onPress = function(){
 			else{
 				setting.removeMovieClip();
 				smode.removeMovieClip();
+				description.removeMovieClip();
 				while(modes.length > 0){
 					modes.pop().removeMovieClip();
 				}
@@ -65,9 +67,10 @@ textBox(Title, gameName, width / 2, height / 3, data.myfont, false);
 data.myfont.size = defaultFontSize;
 
 setting = createEmptyMovieClip("setting", 65534);
-drawRect(setting, 0, 0, 80, 80, 0, 0, 0xC0C0C0);
-textBox(setting, "設定", 40, 40, data.myfont, false);
+drawRect(setting, 0, 0, 80, 80, 0.1, 0, 0xC0C0C0);
+textBox(setting, "設　\n　定", 40, 40, data.myfont, false);
 setting.onPress = function(){
+	if (stopped) return;
 	stopped = true;
 	var dialog = createEmptyMovieClip("dialog", 65535);
 	dialog._x = width / 2 - 100;
@@ -111,5 +114,25 @@ setting.onPress = function(){
 	}
 }
 
+description = createEmptyMovieClip("setting", 65530);
+drawRect(description, 80, 0, 160, 80, 0.1, 0, 0xC0C0C0);
+textBox(description, "操作\n方法", 120, 40, data.myfont, false);
+description.onPress = function(){
+	if (stopped) return;
+	stopped = true;
+	var desc = createEmptyMovieClip("desc", 65531);
+	desc._x = width / 2 - 100;
+	desc._y = height / 2 - 100;
+	var quit_temp = desc.createEmptyMovieClip("quit", 1);
+	quitButton(quit_temp, 200, 0, function(){
+		stopped = false;
+		desc.removeMovieClip();
+	});
+	drawRect(desc, 0, 0, 200, 200, 1, LColor, FColor);
+	var de = desc.createEmptyMovieClip("de", 2);
+	data.myfont.size = 16;
+	textBox(de, "役立つ操作方法！\n\nマウスホイール：　　\n　　マップ拡大縮小　\n\n１～５キー：　　　　\n　　階選択　　　　　\n\n以上！", 100, 100, data.myfont, false);
+	data.myfont.size = defaultFontSize;
+}
 
 stop();
