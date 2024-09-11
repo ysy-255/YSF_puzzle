@@ -11,19 +11,28 @@
 #include "charset_convert.hpp"
 #include "FILE.hpp"
 
-std::string sharedObjectPath = "\\Macromedia\\Flash Player\\#SharedObjects\\";
+std::string sharedObjectPath = "/Macromedia/Flash Player/#SharedObjects/";
 std::string sharedObjectName = "YSF_Puzzle";
 
-std::string rankingPath = utf8_to_shiftjis("../ゲーム/YSF_puzzle/data/rank.dat");
+std::string rankingPath = "./data/rank.dat";
+std::string ysfjk_mainHWnd_change_path = "MainWindowHandle.ysfjk";
+std::string ysfjk_changeflag_path = "ChangeMainWindow.ysfjk";
 
-std::map<std::string/* 難易度名 */, std::vector<std::pair<int /* スコア */, std::string /* 名前 */>>> ranking;
+std::map<std::string /* 難易度名 */, std::vector<std::pair<int /* スコア */, std::string /* 名前 */>>> ranking;
 std::string state;
 std::vector<unsigned char> valuestream;
 
 std::vector<unsigned char> file_to_datastream(std::string path){
 	std::ifstream File(path,  std::ios::binary | std::ios::ate);
+	short tryed = 0;
+	while(!File.is_open() && tryed++ < 10){
+		printf("ファイルを開けませんでした: %s\n", path.c_str());
+		Sleep(500);
+		File.clear();
+		File.open(path,  std::ios::binary | std::ios::ate);
+	}
 	if(!File.is_open()){
-		printf("ファイルを開けませんでした。%s (%s%s%s)", path.c_str(), (File.eof() ? "EOF " : ""), (File.fail() ? "FAIL " : ""), (File.bad() ? "BAD " : ""));
+		printf("ファイルを開けませんでした: %s\n", path.c_str());
 		return {};
 	}
 	int FileSize = File.tellg();
@@ -127,7 +136,6 @@ void writeRanking(){
 }
 
 void sharedObjectReader(){
-	Sleep(10);
 	std::vector<unsigned char> datastream = file_to_datastream(sharedObjectPath);
 	int offset = 32;
 	for(int i = 0; i < 2; i++){
@@ -188,12 +196,12 @@ void valuestream_register(){
 DWORD ProcessId; // このプログラムが終了するときに終了するプロセス(puzzle.exe)
 
 void changeMainHandle(const HWND & hWnd){
-	std::ofstream ysfjk_hWnd(utf8_to_shiftjis("../ゲーム/YSF_puzzle/MainWindowHandle.ysfjk"));
+	std::ofstream ysfjk_hWnd(ysfjk_mainHWnd_change_path);
 	ysfjk_hWnd << "MainWindowHandle=";
 	ysfjk_hWnd << reinterpret_cast<uint64_t>(hWnd);
 	ysfjk_hWnd << "\nProcessIds=";
 	ysfjk_hWnd << ProcessId;
-	std::ofstream ysfjk_changeFlag(utf8_to_shiftjis("../ゲーム/YSF_puzzle/ChangeMainWindow.ysfjk"));
+	std::ofstream ysfjk_changeFlag(ysfjk_changeflag_path);
 	ysfjk_hWnd.close();
 	ysfjk_changeFlag.close();
 	return;
@@ -226,12 +234,25 @@ void changeMainByPI(PROCESS_INFORMATION & pi){
 int main(){
 	SetConsoleOutputCP(CP_UTF8);
 	SetConsoleCP(CTRY_JAPAN);
+	std::filesystem::path currentpath = std::filesystem::current_path();
+	puts(currentpath.string().c_str());
+	if(currentpath.string().size() > 46){
+		std::string S = "ランチャー本体";
+		std::string T = currentpath.string();
+		bool flag = true;
+		int Ssize = S.size();
+		int Tsize = T.size();
+		for(int offset = 0; offset < Ssize; ++offset) flag &= (T[offset + Tsize - Ssize] == S[offset]);
+		if(flag){
+			std::filesystem::current_path(currentpath.parent_path() / "ゲーム/YSF_puzzle");
+		}
+	}
+	readRanking();
 	STARTUPINFOA si;
 	memset(&si, 0, sizeof(si));
 	si.cb = sizeof(si);
 	PROCESS_INFORMATION pi;
-	std::string mycommand = utf8_to_shiftjis("FlashPlayer10.exe ../ゲーム/YSF_puzzle/puzzle.swf");
-	if(!CreateProcessA(NULL, const_cast<char*>(mycommand.c_str()),NULL,NULL,false,0,NULL,NULL,&si,&pi)){
+	if(!CreateProcessA(NULL, const_cast<char*>("FlashPlayer10.exe puzzle.swf"),NULL,NULL,false,0,NULL,NULL,&si,&pi)){
 		puts("puzzle.exe の生成に失敗しました。");
 		return 1;
 	}
@@ -239,6 +260,7 @@ int main(){
 	changeMainByPI(pi);
 
 	// shareObjectのパスを取得したい！
+	Sleep(1000);
 	CHAR AppDataPath[MAX_PATH];
 	SHGetSpecialFolderPathA(NULL, AppDataPath, CSIDL_APPDATA, 0);
 	sharedObjectPath = std::string(AppDataPath) + sharedObjectPath;
@@ -247,7 +269,7 @@ int main(){
 		sharedObjectPath = i.path().string();
 		break;
 	}
-	sharedObjectPath += "\\localhost\\";
+	sharedObjectPath += "/localhost/";
 	HANDLE hDir = FindFirstChangeNotificationA(
 		sharedObjectPath.c_str(),     // 監視するディレクトリの完全パス
 		FALSE,                        // 指定したディレクトリのみ
@@ -259,12 +281,13 @@ int main(){
 		return 1;
 	}
 	sharedObjectPath += sharedObjectName + ".sol";
-	printf("SharedObject : %s\n", sharedObjectPath.c_str());
-	
+	puts(sharedObjectPath.c_str());
+
 	HANDLE handles[2] = {hDir, pi.hProcess};
 	std::string laststate; // デバウンス用
 	while(true){
 		DWORD dwWaitStatus = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
+		Sleep(10);
 		switch(dwWaitStatus){
 			case WAIT_OBJECT_0:{
 				sharedObjectReader();

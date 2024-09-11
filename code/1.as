@@ -8,12 +8,15 @@ getURL("FSCommand:" add "fullscreen", "true");
 // 再生中に右クリック->再生とかされると困ります　なつみSTEP！のおまけじゃあるまいし
 Stage.showMenu = false;
 
-Stage.scaleMode = "exactFit";
 width = Stage.width;
 height = Stage.height;
 
 defaultFontSize = 36;
 
+shared_obj = SharedObject.getLocal("YSF_puzzle", "/");
+shared_obj.data.state = "none";
+shared_obj.data.value = "none";
+shared_obj.flush();
 // ---------- 深度管理表 ----------
 // 背景色(黒)          : 0
 // データ              : 1
@@ -65,6 +68,26 @@ function drawRect(parent, x1, y1, x2, y2, line_width, line_color, fill_color){
 	parent.lineTo(x1, y2);
 	parent.lineTo(x1, y1);
 	parent.endFill();
+};
+
+function drawCircle(parent, x, y, radius, from, to, line_width, line_color, line_alpha, fill_color, fill_alpha){
+	parent.lineStyle(line_width, line_color, line_alpha);
+	parent.beginFill(fill_color, fill_alpha);
+	parent.moveTo(Math.cos(from) * radius + x, Math.sin(from) * radius + y);
+	while(from < to){
+		var x2 = Math.cos(from) * radius;
+		var y2 = Math.sin(from) * radius;
+		from = Math.min(from + Math.PI / 4, to);
+		var x_now = x2;
+		var y_now = y2;
+		x2 = Math.cos(from) * radius;
+		y2 = Math.sin(from) * radius;
+		var k = radius * radius / (x_now * y2 - y_now * x2);
+		var y1 = (x_now - x2) * k;
+		var x1 = (y2 - y_now) * k;
+		parent.curveTo(x + x1, y + y1, x + x2, y + y2);
+	}
+	return;
 };
 
 

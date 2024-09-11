@@ -97,21 +97,21 @@ sfloor.lineTo(width / 12 - 4, height / 7 - 4);
 sfloor.lineTo(4, height / 7 - 4);
 sfloor.lineTo(4, 4);
 
-floor_switch = new Array(0, 0, 0, 0, 0);
+floor_switch = new Array(0, 0, 0, 0, 0, 0);
 for(_3 in floor_switch){
 	var floor = (Number(_3) + 1);
 	floor_switch[_3] = createEmptyMovieClip("switch_" + floor, 300 + Number(_3));
 	floor_switch[_3].floor = floor;
 	floor_switch[_3]._y = height / 7 * _3;
-	textBox(floor_switch[_3], ["０","１","２","３","４","５"][floor] + "F", width / 24, height / 14, data.myfont, false);
-	drawRect(floor_switch[_3], 0.5, 0, width / 12, height / 7, 0.5, LColor, FColor);
+	textBox(floor_switch[_3], ["０","１","２","３","４","５","Ｒ"][floor] + "F", width / 24, height / (floor == 6 ? 28 : 14), data.myfont, false);
+	drawRect(floor_switch[_3], 0.5, 0, width / 12, height / (floor == 6 ? 14 : 7), 0.5, LColor, FColor);
 	floor_switch[_3].onPress = function(){
 		nowfloor = this.floor;
 	};
 }
 listener.onKeyDown = function(){
 	var Key = Key.getCode();
-	if(49 <= Key && Key <= 53){
+	if(49 <= Key && Key <= 54){
 		nowfloor = Key - 48;
 	}
 };
@@ -145,7 +145,7 @@ allfloors.onEnterFrame = function(){
 	}
 };
 
-floors = new Array(0, 0, 0, 0, 0);
+floors = new Array(0, 0, 0, 0, 0, 0);
 for(_1 in floors){
 	var floor = (Number(_1) + 1);
 	floors[_1] = allfloors.createEmptyMovieClip("floor_" + floor, 201 + Number(_1));
@@ -190,13 +190,41 @@ function map_add(parent, type, x1, y1, x2, y2, line_width, color){
 	return offset;
 }
 
+function line_add(parent, type, x1, y1, x2, y2){
+	var offset = 1;
+	parent.lineStyle(1.5, LColor, 100);
+	parent.endFill();
+	switch (type){
+		case 'r':{
+			parent.moveTo(x1, y1);
+			parent.lineTo(x2, y1);
+			parent.lineTo(x2, y2);
+			parent.lineTo(x1, y2);
+			parent.lineTo(x1, y1);
+			offset += 4;
+			break;
+		}
+		case 'm':{
+			parent.moveTo(x1, y1);
+			offset += 2;
+			break;
+		}
+		case 'l':{
+			parent.lineTo(x1, y1);
+			offset += 2;
+			break;
+		}
+	}
+	return offset;
+}
+
 // マップは文字なし　右側にピース追加
 function room_add(parent, type, x1, y1, x2, y2, color, x, y){
 	var offset = 1;
-	parent.lineStyle(1.5, 0x808080, 100);
+	parent.lineStyle(1.5, darkmode ? 0xC0C0C0 : 0x808080, 100);
 	switch(type){
 		case 'r':{
-			drawRect(parent, x1 - x, y1 - y, x2 - x, y2 - y, 1.5, 0x808080, color);
+			drawRect(parent, x1 - x, y1 - y, x2 - x, y2 - y, 1.5, darkmode ? 0xC0C0C0 : 0x808080, color);
 			offset += 4;
 			break;
 		}
@@ -265,14 +293,23 @@ allrooms.onEnterFrame = function(){
 			if(type == 'm' || type == 'l'){
 				var x = area[offset + 1];
 				var y = area[offset + 2];
-				offset += map_add(floors[floor - 1], type, x, y, -1, -1, 1, color);
+				offset += (color == 0x000000) ? line_add(floors[floor - 1], type, x, y, -1, -1) : map_add(floors[floor - 1], type, x, y, -1, -1, 1, color);
+			}
+			else if(type == 'c'){
+				var x = area[offset + 1];
+				var y = area[offset + 2];
+				var r = area[offset + 3];
+				var from = area[offset + 4] / 180 * Math.PI;
+				var to = area[offset + 5] / 180 * Math.PI;
+				drawCircle(floors[floor - 1], x, y, r, from, to, (color == 0x000000) ? 1 : 0, LColor, (color == 0x000000) ? 100 : 0, color, (color == 0x000000) ? 0 : 100);
+				offset += 6;
 			}
 			else{
 				var x1 = area[offset + 1];
 				var y1 = area[offset + 2];
 				var x2 = area[offset + 3];
 				var y2 = area[offset + 4];
-				offset += map_add(floors[floor - 1], type, x1, y1, x2, y2, 0, color);
+				offset += (color == 0x000000) ? line_add(floors[floor - 1], type, x1, y1, x2, y2) : map_add(floors[floor - 1], type, x1, y1, x2, y2, 0, color);
 			}
 		};
 	}
@@ -318,6 +355,17 @@ allrooms.onEnterFrame = function(){
 			var offset = 9;
 			while (offset < area.length){
 				var type = area[offset];
+				if(type == 'c'){
+					var x1 = area[offset + 1];
+					var y1 = area[offset + 2];
+					var r = area[offset + 3];
+					var from = area[offset + 4] / 180 * Math.PI;
+					var to = area[offset + 5] / 180 * Math.PI;
+					drawCircle(floors[floor - 1], x1, y1, r, from, to, 0.5, LColor, 100, color, (color == 0x000000) ? 0 : 100);
+					drawCircle(room_mc, x1 - x, y1 - y, r, from, to, 0.5, darkmode ? 0xC0C0C0 : 0x808080, 100, color, (color == 0x000000) ? 0 : 100);
+					offset += 6;
+					continue;
+				}
 				var x1 = area[offset + 1];
 				var y1 = area[offset + 2];
 				var x2 = area[offset + 3];
@@ -389,6 +437,16 @@ allrooms.onEnterFrame = function(){
 			var offset = 9;
 			while (offset < area.length){
 				var type = area[offset];
+				if(type == 'c'){
+					var x = area[offset + 1];
+					var y = area[offset + 2];
+					var r = area[offset + 3];
+					var from = area[offset + 4] / 180 * Math.PI;
+					var to = area[offset + 5] / 180 * Math.PI;
+					drawCircle(floors[floor - 1], x, y, r, from, to, (color == 0x000000) ? 1 : 0, LColor, (color == 0x000000) ? 100 : 0, color, (color == 0x000000) ? 0 : 100);
+					offset += 6;
+					continue;
+				}
 				var x1 = area[offset + 1];
 				var y1 = area[offset + 2];
 				var x2 = area[offset + 3];
