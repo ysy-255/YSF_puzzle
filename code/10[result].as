@@ -1,21 +1,19 @@
-goresult.removeMovieClip();
+var base_diff = Difficulty;
 
-var mode2 = mode;
-
-shared_obj = SharedObject.getLocal("YSF_puzzle", "/");
-if(shared_obj){
-	shared_obj.data.state = "ranking";
-	shared_obj.data.value = String(Math.random());
-	shared_obj.flush();
+s_obj = SharedObject.getLocal("YSF_puzzle", "/");
+if(s_obj){
+	s_obj.data.state = "ranking";
+	s_obj.data.value = String(Math.random());
+	s_obj.flush();
 }
 
 // もどる
 createEmptyMovieClip("back_game", 9);
-drawRect(back_game, 0, height / 7 * 6, width / 12, height, 1, LColor, FColor);
-textBox(back_game, "戻ﾙ", width / 24, height / 14 * 13, data.myfont, false);
+drawRect(back_game, 0, Height / 7 * 6, Width / 12, Height / 7, 1, LColor, FColor);
+textBox(back_game, "戻ﾙ", Width / 24, Height / 14 * 13, false);
 back_game.onPress = function(){
-	popUp("タイトル画面に戻りますか？", function(){
-		shared_obj = null;
+	confirmPopUp("タイトル画面に戻りますか？", function(){
+		s_obj = null;
 		_root.rank.removeMovieClip();
 		_root.smode.removeMovieClip();
 		while (modes.length > 0){
@@ -27,52 +25,52 @@ back_game.onPress = function(){
 };
 
 var rank = createEmptyMovieClip("ranking", 100);
-data.myfont.size = 24;
-textBox(rank, "ランキング", width / 6, height / 14, data.myfont, false);
-data.myfont.size = 16;
+t_fmt.size = 24;
+textBox(rank, "ランキング", Width / 6, Height / 14, false);
+t_fmt.size = 16;
 var sukoatouroku = "--------スコア登録--------\n";
 var _ = 0;
 for(; _ < 12; _++) sukoatouroku += "|                        |\n";
 sukoatouroku += "--------------------------";
-textBox(rank, sukoatouroku, width / 6, height / 21 * 10, data.myfont, false);
-textBox(rank, "あなたの\nクリアタイム：", width / 6, height / 21 * 6, data.myfont, false);
-textBox(rank, timeconvert(time), width / 6, height / 21 * 8, data.myfont, false);
-textBox(rank, "ニックネーム：", width / 6, height / 21 * 10, data.myfont, false);
+textBox(rank, sukoatouroku, Width / 6, Height / 21 * 10, false);
+textBox(rank, "あなたの\nクリアタイム：", Width / 6, Height / 21 * 6, false);
+textBox(rank, timeconvert(time), Width / 6, Height / 21 * 8, false);
+textBox(rank, "ニックネーム：", Width / 6, Height / 21 * 10, false);
 nickname = rank.createEmptyMovieClip("nickname", rank.getNextHighestDepth());
-textBox(nickname, "ここをクリック", width / 6, height / 21 * 11, data.myfont, true);
+var nickname_tf = textBox(nickname, "ここをクリック", Width / 6, Height / 21 * 11, true);
 nickname.onPress = function(){
 	getURL("FSCommand:" add "fullscreen", "false");
-	shared_obj.data.state = "nick";
-	shared_obj.data.value = String(Math.random());
-	shared_obj.flush();
+	s_obj.data.state = "nick";
+	s_obj.data.value = String(Math.random());
+	s_obj.flush();
 	this.onEnterFrame = function(){
-		shared_obj = null;
-		shared_obj = SharedObject.getLocal("YSF_puzzle", "/");
-		if (shared_obj.data.state == "return"){
+		s_obj = null;
+		s_obj = SharedObject.getLocal("YSF_puzzle", "/");
+		if (s_obj.data.state == "return"){
 			getURL("FSCommand:" add "fullscreen", "true");
-			this.label0.text = shared_obj.data.value;
-			shared_obj.data.state = "none";
-			shared_obj.flush();
+			nickname_tf.text = s_obj.data.value;
+			s_obj.data.state = "none";
+			s_obj.flush();
 			this.onEnterFrame = null;
 		}
 	};
 };
-data.myfont.size = 8;
-textBox(rank, "(セキュリティの関係で新しいウィンドウで開きます)", width / 6, height / 21 * 12, data.myfont, false);
-data.myfont.size = 16;
+t_fmt.size = 8;
+textBox(rank, "(セキュリティの関係で新しいウィンドウで開きます)", Width / 6, Height / 21 * 12, false);
+t_fmt.size = 16;
 register = rank.createEmptyMovieClip("register", rank.getNextHighestDepth());
-textBox(register, "登録", width / 6, height / 21 * 14, data.myfont, true);
-data.myfont.size = defaultFontSize;
+textBox(register, "登録", Width / 6, Height / 21 * 14, true);
+t_fmt.size = defaultFontSize;
 register.onPress = function(){
-	var name = rank.nickname.label0.text;
+	var name = nickname_tf.text;
 	if(name == "ここをクリック"){
-		popUp("ニックネームを\n入力してください");
+		confirmPopUp("ニックネームを\n入力してください");
 	}
 	else{
-		popUp("登録してよろしいですか？", function(){
+		confirmPopUp("登録してよろしいですか？", function(){
 			rank.register.onPress = null;
 			var text = "";
-			var modename = ["easy", "normal", "hard", "insane"][mode2 - 1];
+			var modename = ["easy", "normal", "hard", "insane"][base_diff];
 			text += String(modename.length);
 			text += modename;
 			text += String(name.length).length;
@@ -80,36 +78,36 @@ register.onPress = function(){
 			text += name;
 			text += String(time).length;
 			text += String(time);
-			shared_obj.data.state = "register";
-			shared_obj.data.value = text;
-			shared_obj.flush();
+			s_obj.data.state = "register";
+			s_obj.data.value = text;
+			s_obj.flush();
 		});
 	}
 };
 
-textBox(rank, "Loading...", width / 2, height / 2, data.myfont, false);
+var rank_tf = textBox(rank, "Loading...", Width / 2, Height / 2, false);
 rank.mode = "no";
 rank.data = "no";
 rank.onEnterFrame = function(){
-	if(shared_obj.data.state != "data" && shared_obj.data.state != "nick" && shared_obj.data.state != "none"){
-		shared_obj = null;
-		shared_obj = SharedObject.getLocal("YSF_puzzle", "/");
+	if(s_obj.data.state != "data" && s_obj.data.state != "nick" && s_obj.data.state != "none"){
+		s_obj = null;
+		s_obj = SharedObject.getLocal("YSF_puzzle", "/");
 		this.data = "no";
 	}
 	else if(this.data == "no"){
 		this.data = [[], [], [], []];
-		this.label8._visible = false;
-		var value = shared_obj.data.value;
+		rank_tf._visible = false;
+		var value = s_obj.data.value;
 		var offset = 0;
 		while(offset < value.length){
 			var modeLength = Number(value.charAt(offset));
 			offset ++;
 			var mode_ = value.substr(offset, modeLength);
 			offset += modeLength;
-			if(mode_ == "easy") mode_ = 1;
-			if(mode_ == "normal") mode_ = 2;
-			if(mode_ == "hard") mode_ = 3;
-			if(mode_ == "insane") mode_ = 4;
+			if(mode_ == "easy") mode_ = 0;
+			if(mode_ == "normal") mode_ = 1;
+			if(mode_ == "hard") mode_ = 2;
+			if(mode_ == "insane") mode_ = 3;
 			var vecSizeLength = Number(value.charAt(offset));
 			offset ++;
 			var vecSize = Number(value.substr(offset, vecSizeLength));
@@ -125,21 +123,21 @@ rank.onEnterFrame = function(){
 				offset ++;
 				var score = Number(value.substr(offset, scoreLength));
 				offset += scoreLength;
-				this.data[mode_ - 1].push([score, name]);
+				this.data[mode_].push([score, name]);
 			}
 		}
 		this.mode = -1;
 	}
-	else if (this.mode != mode){
-		this.label8.removeTextField();
-		this.mode = mode;
-		var vecSize = this.data[mode - 1].length;
+	else if (this.mode != Difficulty){
+		rank_tf.removeTextField();
+		this.mode = Difficulty;
+		var vecSize = this.data[Difficulty].length;
 		var text = "------------------------------------------------\n|順位|クリアタイム| ニックネーム      \n------------------------------------------------";
 		var _ = 0;
 		for (; _ < vecSize; _++){
 			var jyunni = Number(_) + 1; if(jyunni < 10) jyunni = ' ' + jyunni;
-			var score = this.data[mode - 1][_][0];
-			var name = this.data[mode - 1][_][1];
+			var score = this.data[Difficulty][_][0];
+			var name = this.data[Difficulty][_][1];
 			text += "\n| ";
 			text += jyunni;
 			text += " | ";
@@ -148,28 +146,28 @@ rank.onEnterFrame = function(){
 			text += name;
 			text += "\n------------------------------------------------";
 		}
-		data.myfont.size = 16;
-		data.myfont.align = "left";
-		textBox(this, text, width / 3 * 2, height / 2, data.myfont, false);
-		data.myfont.size = defaultFontSize;
-		data.myfont.align = "center";
-		this.label8._y = 48;
-		this.label8.autoSize = "left";
-		var scrollbar = (this.label8._height + 48 - height > 0);
+		t_fmt.size = 16;
+		t_fmt.align = "left";
+		textBox(this, text, Width / 3 * 2, Height / 2, false);
+		t_fmt.size = defaultFontSize;
+		t_fmt.align = "center";
+		rank_tf._y = 48;
+		rank_tf.autoSize = "left";
+		var scrollbar = (rank_tf._height + 48 - Height > 0);
 		scroll._visible = scrollbar;
 		if(scrollbar){
-			scroll._yscale = (height - 48) * (height - 48) / this.label8._height / height * 100;
-			scroll._y = Math.min(scroll._y, height * (1 - scroll._yscale / 100));
+			scroll._yscale = (Height - 48) * (Height - 48) / rank_tf._height / Height * 100;
+			scroll._y = Math.min(scroll._y, Height * (1 - scroll._yscale / 100));
 		}
 	}
-	this.label8._y = - (scroll._y - 48) / ((height * (1 - scroll._yscale / 100)) - 48) * (this._height - height + 48) + 48;
+	rank_tf._y = - (scroll._y - 48) / ((Height * (1 - scroll._yscale / 100)) - 48) * (this._height - Height + 48) + 48;
 };
 
 var scroll = createEmptyMovieClip("scroll", 110);
-drawRect(scroll, width - 16, 0, width, height, 0.5, LColor, FColor);
+drawRect(scroll, Width - 16, 0, 16, Height, 0.5, LColor, FColor);
 scroll._y = 48;
 scroll.onPress = function(){
-	this.startDrag (false, 0, 48, 0, height * (1 - this._yscale / 100));
+	this.startDrag (false, 0, 48, 0, Height * (1 - this._yscale / 100));
 };
 scroll.onRelease = function(){
 	stopDrag ();
@@ -177,27 +175,27 @@ scroll.onRelease = function(){
 
 
 var smode = createEmptyMovieClip("selected_mode", 99);
-smode._x = - width;
+smode._x = - Width;
 smode._y = 0;
 smode.onEnterFrame = function(){
-	if(mode != "no"){
-		if(this._x < 0) this._x = modes[mode - 1]._x;
-		this._x -= (this._x - modes[mode - 1]._x) / 3;
+	if(Difficulty != "no"){
+		if(this._x < 0) this._x = modes[Difficulty]._x;
+		this._x -= (this._x - modes[Difficulty]._x) / 3;
 	}
 };
-drawRect(smode, 0, 0, width / 20 * 3, 48, 1, 0x00C000, FColor);
+drawRect(smode, 0, 0, Width / 20 * 3, 48, 1, 0x00C000, FColor);
 modes = new Array(0, 0, 0, 0);
-data.myfont.size = 16;
+t_fmt.size = 16;
 for(i in modes){
 	modes[i] = createEmptyMovieClip(["easy", "normal", "hard", "insane"][i], 101 + i);
-	modes[i]._x = width / 19 * 7 + width / 20 * 3 * i;
+	modes[i]._x = Width / 19 * 7 + Width / 20 * 3 * i;
 	modes[i]._y = 0;
-		modes[i].mode = Number(i) + 1;
-		drawRect(modes[i], 4, 4, width / 20 * 3 - 4, 44, 0.5, LColor, FColor);
-		textBox(modes[i], ["一般向け", "生徒向け", "ぜんぶ", (darkmode ? "::black::" : "::white::")][i], width / 40 * 3, 24, data.myfont, false);
-		modes[i].onPress = function(){
-			mode = this.mode;
-		};
+	modes[i].mode = Number(i);
+	drawRect(modes[i], 4, 4, Width / 20 * 3 - 8, 40, 0.5, LColor, FColor);
+	textBox(modes[i], ["一般向け", "生徒向け", "ぜんぶ", (DarkMode ? "::black::" : "::white::")][i], Width / 40 * 3, 24, false);
+	modes[i].onPress = function(){
+		Difficulty = this.mode;
+	};
 }
-data.myfont.size = defaultFontSize;
+t_fmt.size = defaultFontSize;
 stop();

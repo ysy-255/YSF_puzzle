@@ -1,138 +1,153 @@
 /* [6]title */
 
-loading.removeTextField();
+DataLoader.removeMovieClip();
 
 
-data.myfont.align = "center";
-data.myfont.size = defaultFontSize;
+var smode_mc:MovieClip = _root.createEmptyMovieClip("selected_mode", 99);
+smode_mc._x = - Width;
+smode_mc._y = Height / 12 * 5;
+drawRect(smode_mc, 0, -4, Width / 5, Height / 6 + 8, 1, 0x00C000, -1);
+smode_mc._visible = false;
 
+var mode_proceed_mc:MovieClip = _root.createEmptyMovieClip("gomode", 100);
+var mode_proceed_mc_tf:TextField = textBox(mode_proceed_mc, "モード選択へ", Width / 2, Height / 3 * 2, false);
 
-createEmptyMovieClip("gomode", 100);
-data.myfont.size = 32;
-textBox(gomode, "モード選択へ", width / 2, height / 3 * 2, data.myfont, false);
-data.myfont.size = defaultFontSize;
-modes = new Array(0, 0, 0, 0);
-gomode.onPress = function(){
-	Title.removeMovieClip();
-	popUp.removeMovieClip();
-	data.myfont.size = 24;
-	var smode = createEmptyMovieClip("selected_mode", 99);
-	smode._x = - width;
-	smode._y = height / 12 * 5;
-	smode.onEnterFrame = function(){
-		if(mode != "no"){
-			if(this._x < 0) this._x = modes[mode - 1]._x;
-			this._x -= (this._x - modes[mode - 1]._x) / 3;
-		}
-	};
-	drawRect(smode, 0, -4, width / 5, height / 6 + 4, 1, 0x00C000, FColor);
-	for (i in modes){
-		modes[i] = createEmptyMovieClip(["easy", "normal", "hard", "insane"][i], 101 + i);
-		modes[i]._x = width / 10 * (1 + i * 2);
-		modes[i]._y = height / 12 * 5;
-		modes[i].mode = Number(i) + 1;
-		// if (modes[i].mode == 1) modes[i].mode = 0;
-		drawRect(modes[i], 4, 0, width / 5 - 4, height / 6, 0.5, LColor, FColor);
-		textBox(modes[i], ["一般向け", "生徒向け", "ぜんぶ", (darkmode ? "::black::" : "::white::")][i], width / 10, height / 12, data.myfont, false);
+var title_mc:MovieClip = _root.createEmptyMovieClip("Title", 110);
+t_fmt.size = 24;
+var title_mc_tf:TextField = textBox(title_mc, GameName, Width / 2, Height / 3, false);
+t_fmt.size = defaultFontSize;
+
+var start_mc:MovieClip = _root.createEmptyMovieClip("start", 150);
+var start_mc_tf:TextField = textBox(start_mc, "ゲームスタート", Width / 2, Height / 3 * 2, false);
+start_mc._visible = false;
+
+var setting_mc:MovieClip = _root.createEmptyMovieClip("setting", 65534);
+drawRect(setting_mc, 0, 0, 80, 80, 0.1, 0, 0xC0C0C0);
+var setting_mc_tf:TextField = textBox(setting_mc, "設　\n　定", 40, 40, false);
+
+var description_mc:MovieClip = _root.createEmptyMovieClip("description", 65530);
+drawRect(description_mc, 80, 0, 80, 80, 0.1, 0, 0xC0C0C0);
+var description_mc_tf:TextField = textBox(description_mc, "操作\n方法", 120, 40, false);
+
+var mode_labels:Array = ["一般向け", "生徒向け", "ぜんぶ", (DarkMode ? "::black::" : "::white::")];
+var mode_names:Array = ["easy", "normal", "hard", "insane"];
+var modes:Array = [0, 0, 0, 0];
+
+for (_i in mode_labels){
+	var i:Number = Number(_i);
+	modes[i] = _root.createEmptyMovieClip(mode_names[i], i + 101);
+	modes[i]._x = Width / 10 * (1 + i * 2);
+	modes[i]._y = Height / 12 * 5;
+	modes[i].i = Number(i);
+}
+
+mode_proceed_mc.onPress = function(){
+	//_root.getInstanceAtDepth(65538).removeMovieClip();
+	t_fmt.size = 24;
+	for (_i in modes){
+		var i:Number = Number(_i);
+		modes[i]._visible = true;
+		modes[i].tf = textBox(modes[i], mode_labels[i], Width / 10, Height / 12, false);
+		drawRect(modes[i], 4, 0, Width / 5 - 8, Height / 6, 0.5, LColor, FColor);
 		modes[i].onPress = function(){
-			mode = this.mode;
+			Difficulty = this.i;
 		};
 	}
-	data.myfont.size = 36;
-	createEmptyMovieClip("start", 150);
-	textBox(start, "ゲームスタート", width / 2, height / 3 * 2, data.myfont, false);
-	start.onPress = function(){
-		if(!stopped){
-			if(mode === "no"){
-				popUp("モードを選択してください", false);
+	t_fmt.size = defaultFontSize;
+	title_mc.removeMovieClip();
+	smode_mc._visible = true;
+	smode_mc.onEnterFrame = function(){
+		if(Difficulty != -1){
+			if(this._x < 0) this._x = modes[Difficulty]._x;
+			this._x += (modes[Difficulty]._x - this._x) / 3;
+		}
+	};
+	start_mc._visible = true;
+	start_mc.onPress = function(){
+		if(!Paused){
+			if(Difficulty === -1){
+				confirmPopUp("モードを選択してください", false);
 			}
 			else{
-				setting.removeMovieClip();
-				smode.removeMovieClip();
-				description.removeMovieClip();
+				setting_mc.removeMovieClip();
+				smode_mc.removeMovieClip();
+				description_mc.removeMovieClip();
 				while(modes.length > 0){
 					modes.pop().removeMovieClip();
 				}
-				gotoAndPlay("game");
+				play();
+				this.removeMovieClip();
 			}
 		}
 	};
-	gomode.removeMovieClip();
+	this.removeMovieClip();
 	stop();
 };
 
-createEmptyMovieClip("Title", 110);
-data.myfont.size = 24;
-textBox(Title, gameName, width / 2, height / 3, data.myfont, false);
-data.myfont.size = defaultFontSize;
-
-setting = createEmptyMovieClip("setting", 65534);
-drawRect(setting, 0, 0, 80, 80, 0.1, 0, 0xC0C0C0);
-textBox(setting, "設　\n　定", 40, 40, data.myfont, false);
-setting.onPress = function(){
-	if (stopped) return;
-	stopped = true;
-	var dialog = createEmptyMovieClip("dialog", 65535);
-	dialog._x = width / 2 - 100;
-	dialog._y = height / 2 - 100;
-	var quit_temp = dialog.createEmptyMovieClip("quit", 1);
-	quitButton(quit_temp, 200, 0, function(){
-		stopped = false;
+var last_toggled = getTimer();
+setting_mc.onPress = function(){
+	if (Paused) return;
+	Paused = true;
+	var dialog:MovieClip = _root.createEmptyMovieClip("dialog", 65535);
+	dialog._x = Width / 2 - 100;
+	dialog._y = Height / 2 - 100;
+	var dialog_quit:MovieClip = dialog.createEmptyMovieClip("quit", 1);
+	drawRect(dialog, 0, 0, 200, 200, 1, LColor, FColor);
+	quitButton(dialog_quit, 200, 0, function(){
+		Paused = false;
 		dialog.removeMovieClip();
 	});
-	drawRect(dialog, 0, 0, 200, 200, 1, LColor, FColor);
-	var dark = dialog.createEmptyMovieClip("darkmode", 2);
-	data.myfont.size = 16;
-	textBox(dark, "ダークモード：" + (darkmode ? " ON" :"OFF"), 100, 50, data.myfont, false);
-	data.myfont.size = defaultFontSize;
-	dark.onPress = function(){
-		if(darkmode){
-			darkmode = false;
-			this.label0.text = "ダークモード：OFF";
-			insane.label0.text = "::white::";
+	var dmode_mc:MovieClip = dialog.createEmptyMovieClip("darkmode", 2);
+	t_fmt.size = 16;
+	var dmode_mc_tf:TextField = textBox(dmode_mc, "ダークモード：" + (DarkMode ? " ON" : "OFF"), 100, 50, false);
+	t_fmt.size = defaultFontSize;
+	dmode_mc.onPress = function(){
+		var nowTime = getTimer();
+		if(nowTime - last_toggled < 500) return;
+		last_toggled = nowTime;
+		if(DarkMode){
+			DarkMode = false;
+			dmode_mc_tf.text = "ダークモード：OFF";
+			modes[3].tf.text = "::white::";
 		}
 		else{
-			darkmode = true;
-			this.label0.text = "ダークモード： ON";
-			insane.label0.text = "::black::";
+			DarkMode = true;
+			dmode_mc_tf.text = "ダークモード： ON";
+			modes[3].tf.text = "::black::";
 		}
-		wb();
-		this.label0.backgroundColor = FColor;
-		this.label0.textColor = LColor;
-		Title.label0.textColor = LColor;
-		gomode.label0.textColor = LColor;
-		easy.label0.textColor = LColor;
-		normal.label0.textColor = LColor;
-		hard.label0.textColor = LColor;
-		insane.label0.textColor = LColor;
-		start.label0.textColor = LColor;
-		for(i in modes){
-			drawRect(modes[i], 4, 0, width / 5 - 4, height / 6, 0.5, LColor, FColor);
+		ToggleColor();
+		setting_mc_tf.textColor = LColor;
+		description_mc_tf.textColor = LColor;
+		title_mc_tf.textColor = LColor;
+		mode_proceed_mc_tf.textColor = LColor;
+		dmode_mc_tf.textColor = LColor;
+		start_mc_tf.textColor = LColor;
+		for (var i = 0; i < modes.length; ++i){
+			modes[i].tf.textColor = LColor;
 		}
-		drawRect(selected_mode, 0, -4, width / 5, height / 6 + 4, 1, 0x00C000, FColor);
+		for (var i = 0; i < modes.length; ++i){
+			drawRect(modes[i], 0, 0, Width / 5, Height / 6, 0.5, LColor, FColor);
+		}
 		drawRect(dialog, 0, 0, 200, 200, 1, LColor, FColor);
 	}
 }
 
-description = createEmptyMovieClip("setting", 65530);
-drawRect(description, 80, 0, 160, 80, 0.1, 0, 0xC0C0C0);
-textBox(description, "操作\n方法", 120, 40, data.myfont, false);
-description.onPress = function(){
-	if (stopped) return;
-	stopped = true;
-	var desc = createEmptyMovieClip("desc", 65531);
-	desc._x = width / 2 - 100;
-	desc._y = height / 2 - 100;
-	var quit_temp = desc.createEmptyMovieClip("quit", 1);
-	quitButton(quit_temp, 200, 0, function(){
-		stopped = false;
-		desc.removeMovieClip();
+description_mc.onPress = function(){
+	if (Paused) return;
+	Paused = true;
+	var dialog:MovieClip = _root.createEmptyMovieClip("dialog", 65531);
+	dialog._x = Width / 2 - 100;
+	dialog._y = Height / 2 - 100;
+	var desc_quit = dialog.createEmptyMovieClip("quit", 1);
+	quitButton(desc_quit, 200, 0, function(){
+		Paused = false;
+		dialog.removeMovieClip();
 	});
-	drawRect(desc, 0, 0, 200, 200, 1, LColor, FColor);
-	var de = desc.createEmptyMovieClip("de", 2);
-	data.myfont.size = 16;
-	textBox(de, "役立つ操作方法！\n\nマウスホイール：　　\n　　マップ拡大縮小　\n\n１～５キー：　　　　\n　　階選択　　　　　\n\n以上！", 100, 100, data.myfont, false);
-	data.myfont.size = defaultFontSize;
+	drawRect(dialog, 0, 0, 200, 200, 1, LColor, FColor);
+	var de = dialog.createEmptyMovieClip("de", 2);
+	t_fmt.size = 16;
+	textBox(de, "役立つ操作方法！\n\nマウスホイール：　　\n　　マップ拡大縮小　\n\n１～５キー：　　　　\n　　階選択　　　　　\n\n以上！", 100, 100, false);
+	t_fmt.size = defaultFontSize;
 }
 
 stop();

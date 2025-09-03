@@ -1,4 +1,4 @@
-map=1,0xD0B0FF,2,1148,Metalworking_Woodworking_Woom,金工・木工室,d,215,37,r,103,0,371,74,r,60,0,103,30,r,60,30,90,74
+1,0xD0B0FF,2,1148,Metalworking_Woodworking_Woom,金工・木工室,d,215,37,r,103,0,371,74,r,60,0,103,30,r,60,30,90,74
 1,0xD0B0FF,0,1147,Calligraphy_Room,書道室,d,449,37,r,371,0,506,74,r,371,35,400,74
 1,0xD0B0FF,4,1146,Art_and_Calligraphy_Dept_Office,,r,506,0,551,74
 1,0xD0B0FF,2,1145,Art_and_Craft_Room,美術\n工芸室,r,551,0,686,74

@@ -1,8 +1,7 @@
 /* [3]フォントの読み込み */
 
-data.myfont = new TextFormat();
-data.myfont.font = "Nosutaru-dot";
-format_temp = data.myfont;
-format_temp.align = "center";
-format_temp.size = 36;
-loading.setTextFormat(format_temp);
+t_fmt = new TextFormat();
+t_fmt.align = "center";
+t_fmt.font = "Nosutaru-dot";
+t_fmt.size = defaultFontSize;
+DataLoader_tf.setTextFormat(t_fmt);
