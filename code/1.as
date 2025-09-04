@@ -161,29 +161,34 @@ function quitButton(
 	};
 };
 
-function confirmPopUp(text:String, yes_func:Function){
+function confirmPopUp(
+	text:String,
+	yes_func:Function
+){
 	Paused = true;
-	var twidth:Number = Width / 8;
-	var theight:Number = Height / 5;
 
+	t_fmt.size = 12;
 	var pop:MovieClip = _root.createEmptyMovieClip("popUp", 65538);
-	pop._x = twidth * 3;
-	pop._y = theight * 2;
-	drawRect(pop, 0, 0, twidth * 2, theight, 0.5, LColor, FColor);
-	drawRect(pop, 0, 0, twidth * 2, 10, 0.5, LColor, 0xC0C0C0);
+	var pop_tf:TextField = textBox(pop, text, 0, 0, false);
+	var width:Number = pop_tf._width + 20;
+	var height:Number = pop_tf._height + 50;
+	pop_tf._x = width / 2 - pop_tf._width / 2;
+	pop_tf._y = (height - 30) / 2 - pop_tf._height / 2 + 10;
+	pop._x = Width / 2 - width / 2;
+	pop._y = Height / 2 - height / 2;
+	drawRect(pop, 0, 0, width, height, 0.5, LColor, FColor);
+	drawRect(pop, 0, 0, width, 10, 0.5, LColor, 0xC0C0C0);
 
 	var pop_quit:MovieClip = pop.createEmptyMovieClip("quit", 10);
-	quitButton(pop_quit, twidth * 2, 0, function(){
+	quitButton(pop_quit, width, 0, function(){
 		Paused = false;
 		pop.removeMovieClip();
 		return;
 	});
 
-	t_fmt.size = 12;
-	textBox(pop, text, twidth, theight / 3, false);
 
 	var yes_mc:MovieClip = pop.createEmptyMovieClip("Yes", 2);
-	textBox(yes_mc, "はい", twidth * 0.5, theight / 1.5, true);
+	textBox(yes_mc, "はい", width / 4, height - 15, true);
 	yes_mc.onPress = function(){
 		Paused = false;
 		yes_func();
@@ -192,7 +197,7 @@ function confirmPopUp(text:String, yes_func:Function){
 	};
 
 	var no_mc:MovieClip= pop.createEmptyMovieClip("No", 3);
-	textBox(no_mc, "いいえ", twidth * 1.5, theight / 1.5, true);
+	textBox(no_mc, "いいえ", width / 4 * 3, height - 15, true);
 	no_mc.onPress = function(){
 		Paused = false;
 		this._parent.removeMovieClip();

@@ -52,23 +52,20 @@ onMouseUp = function (){
 
 
 // 時間計測など
-time = 0;
-oldTime = getTimer();
+elapsed = 0;
+var oldTime:Number = getTimer();
 main.onEnterFrame = function(){
-	var nowTime = getTimer();
-	if(Paused){
-		// なにもしないよ
-	}
-	else{
-		time += nowTime - oldTime;
+	var newTime:Number = getTimer();
+	if(!Paused){
+		elapsed += newTime - oldTime;
 		if (rooms == complete){
 			Data.chirin.start();
-			confirmPopUp("complete!!\nクリアタイム：" + timeconvert(time) + "\n完成したマップを十分に堪能したら\n右下から結果画面へ進んでね", null);
+			confirmPopUp("complete!!\nクリアタイム：" + timeconvert(elapsed) + "\n\n完成したマップを十分に堪能したら\n右下から結果画面へ進んでね", null);
 			goresult._visible = true;
-			main.removeMovieClip();
+			this.removeMovieClip();
 		}
 	}
-	oldTime = nowTime;
+	oldTime = newTime;
 };
 
 
@@ -77,7 +74,7 @@ var timer_tf:TextField = textBox(timer, "準備中..", Width / 24, Height / 28 *
 t_fmt.size = defaultFontSize;
 timer.onEnterFrame = function(){
 	if (!Paused){
-		var timestr = String(Math.floor(time / 100) / 10);
+		var timestr:String = String(Math.floor(elapsed / 100) / 10);
 		if(timestr.charAt(timestr.length - 2) != '.'){
 			timestr += ".0";
 		}
@@ -491,6 +488,6 @@ goresult.onPress = function(){
 	play();
 	this.removeMovieClip();
 };
-goresult._visible = false;
+goresult._visible = true;
 
 stop();
