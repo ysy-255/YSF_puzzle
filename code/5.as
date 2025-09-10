@@ -1,3 +1,3 @@
 /* [5]マップの読み込み */
 
-DataLoader.lv.load("./data/map.txt");
+DataLoader.lv.load("./data/map.dat");
