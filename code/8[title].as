@@ -39,6 +39,7 @@ for (_i in mode_labels){
 	modes[i]._x = Width / 10 * (1 + i * 2);
 	modes[i]._y = Height / 12 * 5;
 	modes[i].i = Number(i);
+	modes[i]._visible = false;
 }
 
 mode_proceed_mc.onPress = function(){
