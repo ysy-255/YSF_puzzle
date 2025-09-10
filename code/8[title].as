@@ -6,7 +6,7 @@ DataLoader.removeMovieClip();
 var smode_mc:MovieClip = _root.createEmptyMovieClip("selected_mode", 99);
 smode_mc._x = - Width;
 smode_mc._y = Height / 12 * 5;
-drawRect(smode_mc, 0, -4, Width / 5, Height / 6 + 8, 1, 0x00C000, -1);
+drawRect(smode_mc, 0, 0, Width / 5, Height / 6, 1, 0x00C000, -1);
 smode_mc._visible = false;
 
 var mode_proceed_mc:MovieClip = _root.createEmptyMovieClip("gomode", 100);
@@ -48,7 +48,7 @@ mode_proceed_mc.onPress = function(){
 		var i:Number = Number(_i);
 		modes[i]._visible = true;
 		modes[i].tf = textBox(modes[i], mode_labels[i], Width / 10, Height / 12, false);
-		drawRect(modes[i], 4, 0, Width / 5 - 8, Height / 6, 0.5, LColor, FColor);
+		drawRect(modes[i], 4, 4, Width / 5 - 8, Height / 6 - 8, 0.5, LColor, FColor);
 		modes[i].onPress = function(){
 			Difficulty = this.i;
 		};
@@ -122,11 +122,11 @@ setting_mc.onPress = function(){
 		mode_proceed_mc_tf.textColor = LColor;
 		dmode_mc_tf.textColor = LColor;
 		start_mc_tf.textColor = LColor;
-		for (var i = 0; i < modes.length; ++i){
+		for (i in modes){
 			modes[i].tf.textColor = LColor;
 		}
-		for (var i = 0; i < modes.length; ++i){
-			drawRect(modes[i], 0, 0, Width / 5, Height / 6, 0.5, LColor, FColor);
+		for (i in modes){
+			drawRect(modes[i], 4, 4, Width / 5 - 8, Height / 6 - 8, 0.5, LColor, FColor);
 		}
 		drawRect(dialog, 0, 0, 200, 200, 1, LColor, FColor);
 	}

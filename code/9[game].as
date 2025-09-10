@@ -17,9 +17,9 @@ zoom = 30; // 拡大度 大きいほど大きくなる (小泉)
 nowfloor = 1;
 
 
-var back_game:MovieClip = _root.createEmptyMovieClip("back_game", 9);
-var goresult:MovieClip = _root.createEmptyMovieClip("goresult", 100);
 var allfloors:MovieClip = _root.createEmptyMovieClip("allfloors", 200);
+var back_game:MovieClip = _root.createEmptyMovieClip("back_game", 280);
+var goresult:MovieClip = _root.createEmptyMovieClip("goresult", 290);
 var sfloor:MovieClip = _root.createEmptyMovieClip("selected_floor", 310);
 var main:MovieClip = _root.createEmptyMovieClip("main", 1000);
 var timer:MovieClip = _root.createEmptyMovieClip("timer", 1001);
