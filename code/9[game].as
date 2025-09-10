@@ -1,6 +1,6 @@
 /* [8]game */
 
-areas = Data.map.split('\n');
+var areas:Array = Data.map.split('\n');
 
 
 rooms = 0;
@@ -173,303 +173,257 @@ for (var _i in floors){
 	};
 }
 
-// (右側のピースでなく)マップに追加
-function map_add(parent, type, x1, y1, x2, y2, line_width, color){
-	var offset = 1;
+
+function draw_d(
+	parent:MovieClip,
+	src:String,
+	X:Number,
+	Y:Number,
+	line_width:Number,
+	color:Number
+){
 	if(line_width == 0){
 		parent.lineStyle(0, LColor, 0);
 	}
 	else{
 		parent.lineStyle(line_width, LColor, 100);
 	}
-	switch (type){
-		case 'r':{
-			drawRect(parent, x1, y1, x2 - x1, y2 - y1, line_width, LColor, color);
-			offset += 4;
-			break;
+	var has_fill = color != -1;
+	var ops:Array = src.split(' ');
+	var index:Number = 0;
+	var inSubpath:Boolean = false;
+	var x0:Number = -X;
+	var y0:Number = -Y;
+	var x:Number = -X;
+	var y:Number = -Y;
+	var lastop:Number = 76;
+	var lower:Boolean = false;
+	for (; index < ops.length; ++index){
+		var rest = ops.length - index - 1;
+		var op:Number = ops[index].charCodeAt(0);
+		if (48 <= op && op < 58 || op == 45){
+			op = lastop;
+			rest ++;
+			index --;
 		}
-		case 'm':{
-			parent.beginFill(color, 100);
-			parent.moveTo(x1, y1);
-			offset += 2;
-			break;
+		else{
+			lower = op >= 97;
+			if (lower) op -= 32;
 		}
-		case 'l':{
-			parent.lineTo(x1, y1);
-			offset += 2;
-			break;
+		switch(op){
+			case 77:{ // 'M
+				if (rest < 2) return;
+				lastop = 76;
+				var _1 = Number(ops[++index]);
+				var _2 = Number(ops[++index]);
+				if (lower){
+					x += _1;
+					y += _2;
+				}
+				else{
+					x = _1 - X;
+					y = _2 - Y;
+				}
+				parent.moveTo(x, y);
+				x0 = x;
+				y0 = y;
+				if (!inSubpath && has_fill) parent.beginFill(color, 100);
+				inSubpath = true;
+				break;
+			}
+			case 90:{ // 'Z'
+				if (!inSubpath) return;
+				inSubpath = false;
+				if(x != x0 || y != y0){
+					x = x0;
+					y = y0;
+					parent.lineTo(x, y);
+				}
+				if (has_fill) parent.endFill();
+				break;
+			}
+			case 76:{ // 'L'
+				if (rest < 2) return;
+				lastop = 76;
+				var _1 = Number(ops[++index]);
+				var _2 = Number(ops[++index]);
+				if (lower){
+					x += _1;
+					y += _2;
+				}
+				else{
+					x = _1 - X;
+					y = _2 - Y;
+				}
+				parent.lineTo(x, y);
+				break;
+			}
+			case 72:{ // 'H'
+				if (rest < 1) return;
+				lastop = 72;
+				var _1 = Number(ops[++index]);
+				if (lower){
+					x += _1;
+				}
+				else{
+					x = _1 - X;
+				}
+				parent.lineTo(x, y);
+				break;
+			}
+			case 86:{ // 'V'
+				if (rest < 1) return;
+				lastop = 86;
+				var _1 = Number(ops[++index]);
+				if (lower){
+					y += _1;
+				}
+				else{
+					y = _1 - Y;
+				}
+				parent.lineTo(x, y);
+				break;
+			}
+			case 67:{ // 'C' 独自形式 一度しか使わないのでこれでいい
+				if (rest < 5) return;
+				var _1 = Number(ops[++index]) - X;
+				var _2 = Number(ops[++index]) - Y;
+				var _3 = Number(ops[++index]);
+				var _4 = Number(ops[++index]) * Math.PI / 180;
+				var _5 = Number(ops[++index]) * Math.PI / 180;
+				drawCircle(parent, _1, _2, _3, _4, _5);
+				x = _1 + _3 * Math.cos(_5);
+				y = _2 + _3 * Math.sin(_5);
+				break;
+			}
+			default:{
+				return;
+			}
 		}
 	}
-	return offset;
 }
 
-function line_add(parent, type, x1, y1, x2, y2){
-	var offset = 1;
-	parent.lineStyle(1.5, LColor, 100);
-	parent.endFill();
-	switch (type){
-		case 'r':{
-			parent.moveTo(x1, y1);
-			parent.lineTo(x2, y1);
-			parent.lineTo(x2, y2);
-			parent.lineTo(x1, y2);
-			parent.lineTo(x1, y1);
-			offset += 4;
-			break;
-		}
-		case 'm':{
-			parent.moveTo(x1, y1);
-			offset += 2;
-			break;
-		}
-		case 'l':{
-			parent.lineTo(x1, y1);
-			offset += 2;
-			break;
-		}
-	}
-	return offset;
-}
-
-// マップは文字なし　右側にピース追加
-function room_add(parent, type, x1, y1, x2, y2, color, x, y){
-	var offset = 1;
-	parent.lineStyle(1.5, DarkMode ? 0xC0C0C0 : 0x808080, 100);
-	switch(type){
-		case 'r':{
-			drawRect(parent, x1 - x, y1 - y, x2 - x1, y2 - y1, 1.5, DarkMode ? 0xC0C0C0 : 0x808080, color);
-			offset += 4;
-			break;
-		}
-		case 'm':{
-			parent.beginFill(color, 100);
-			parent.moveTo(x1 - x, y1 - y);
-			offset += 2;
-			break;
-		}
-		case 'l':{
-			parent.lineTo(x1 - x, y1 - y);
-			offset += 2;
-			break;
-		}
-		default:{
-			// コメントｷﾀ━━━━(ﾟ∀ﾟ)━━━━!!
-		}
-	}
-	return offset;
-}
-
-var loaded = false; // マップのロードが終わるまで待つ用
 Paused = true;
 lastfloor = 6;
 
 
-
-
-// マップ構築
-// root にくっつけている意味は大してないけどいちいちムービークリップ作るのも億劫なので
 allrooms.onEnterFrame = function(){
-	var area = areas.pop().split("\\n").join('\n').split(',');
-	for(num2 in area){
-		if(isNaN(parseInt(area[num2], 10)) || area[num2][2] == 'x'){
-			// 文字列だー
-		}
-		else{
-			area[num2] = parseInt(area[num2]);
-		}
-	}
-	var floor = area[0];
-	if(floor != lastfloor){
-		nowfloor = Number(floor);
-		lastfloor = floor;
-	}
-	var color = parseInt(area[1], 16);
-	if(DarkMode){
-		var r = (color >> 16) & 0xFF;
-		var g = (color >>  8) & 0xFF;
-		var b = (color >>  0) & 0xFF;
-		r = Math.max(r - 96, 0);
-		g = Math.max(g - 96, 0);
-		b = Math.max(b - 96, 0);
-		color = (r << 16) | (g << 8) | b;
-	}
-	if (area[2] == -1){
-		var offset = 3;
-		while(offset < area.length){
-			var type = area[offset];
-			if(type == 'm' || type == 'l'){
-				var x = area[offset + 1];
-				var y = area[offset + 2];
-				offset += (color == 0x000000) ? line_add(floors[floor - 1], type, x, y, -1, -1) : map_add(floors[floor - 1], type, x, y, -1, -1, 1, color);
-			}
-			else if(type == 'c'){
-				var x = area[offset + 1];
-				var y = area[offset + 2];
-				var r = area[offset + 3];
-				var from = area[offset + 4] / 180 * Math.PI;
-				var to = area[offset + 5] / 180 * Math.PI;
-				drawCircle(floors[floor - 1], x, y, r, from, to, (color == 0x000000) ? 1 : 0, LColor, (color == 0x000000) ? 100 : 0, color, (color == 0x000000) ? 0 : 100);
-				offset += 6;
-			}
-			else{
-				var x1 = area[offset + 1];
-				var y1 = area[offset + 2];
-				var x2 = area[offset + 3];
-				var y2 = area[offset + 4];
-				offset += (color == 0x000000) ? line_add(floors[floor - 1], type, x1, y1, x2, y2) : map_add(floors[floor - 1], type, x1, y1, x2, y2, 0, color);
-			}
-		};
-	}
-	else if (Difficulty >= area[2]){
-		if(Difficulty == 3){
-			color = FColor;
-		}
-		rooms ++;
-		var room_num = area[3];
-		var name = area[4];
-		var room_name = area[5];
-		var room_mc = allrooms.createEmptyMovieClip(name, room_num);
-		room_mc.floor = floor;
-		room_mc.num = room_num;
-		room_mc.name_en = name;
-		room_mc.name_jp = room_name;
-		
-		room_mc._xscale = zoom;
-		room_mc._yscale = zoom;
-		
-		if(area[6] == 'r'){
-			var x1 = area[7];
-			var y1 = area[8];
-			var x2 = area[9];
-			var y2 = area[10];
-			var x = (x1 + x2) / 2;
-			var y = (y1 + y2) / 2;
-			room_mc._x = Width / 3 * 2 + (Width / 3 * Math.random());
-			room_mc._y = Height * Math.random();
-			room_mc.to_x = x;
-			room_mc.to_y = y;
-			map_add(floors[floor - 1], 'r', x1, y1, x2, y2, 0.5, color);
-			room_add(room_mc, 'r', x1, y1, x2, y2, color, x, y);
-			textBox(room_mc, room_name, 0, 0, false);
-		}
-		else if(area[6] == 'd'){
-			var x = area[7];
-			var y = area[8];
-			room_mc._x = Width / 3 * 2 + (Width / 3 * Math.random());
-			room_mc._y = Height * Math.random();
-			room_mc.to_x = x;
-			room_mc.to_y = y;
-			var offset = 9;
-			while (offset < area.length){
-				var type = area[offset];
-				if(type == 'c'){
-					var x1 = area[offset + 1];
-					var y1 = area[offset + 2];
-					var r = area[offset + 3];
-					var from = area[offset + 4] / 180 * Math.PI;
-					var to = area[offset + 5] / 180 * Math.PI;
-					drawCircle(floors[floor - 1], x1, y1, r, from, to, 0.5, LColor, 100, color, (color == 0x000000) ? 0 : 100);
-					drawCircle(room_mc, x1 - x, y1 - y, r, from, to, 0.5, DarkMode ? 0xC0C0C0 : 0x808080, 100, color, (color == 0x000000) ? 0 : 100);
-					offset += 6;
-					continue;
-				}
-				var x1 = area[offset + 1];
-				var y1 = area[offset + 2];
-				var x2 = area[offset + 3];
-				var y2 = area[offset + 4];
-				map_add(floors[floor - 1], type, x1, y1, x2, y2, 0.5, color);
-				offset += room_add(room_mc, type, x1, y1, x2, y2, color, x, y);
-			}
-			textBox(room_mc, room_name, 0, 0, false);
-		}
-		room_mc.onPress = function(){
-			if(Paused){
-				// 動かせない！！
-			}
-			else{
-				this.startDrag (false);
-				this.swapDepths(3000);
-			}
-		};
-		room_mc.onRelease = function(){
-			stopDrag ();
-			var dx = (this._x - allfloors._x) * 100 / zoom - this.to_x;
-			var dy = (this._y - allfloors._y) * 100 / zoom - this.to_y;
-			if (this.floor == nowfloor &&dx * dx + dy * dy < 2500){
-				Data.koteltu.start();
-				this._x = this.to_x;
-				this._y = this.to_y;
-				this.onPress = null;
-				this.onRelease = null;
-				this.onEnterFrame = null;
-				var new_mc = floors[this.floor - 1].createEmptyMovieClip(this.name_en, this.num);
-				textBox(new_mc, this.name_jp, this.to_x, this.to_y, false);
-				complete ++;
-				this.removeMovieClip();
-			}
-		};
-		room_mc.onEnterFrame = function(){
-			if(Difficulty == 3){
-				this._visible = true;
-			}
-			else if(nowfloor != this.floor){
-				this._visible = false;
-			}
-			else{
-				this._visible = true;
-			}
-			this._xscale = zoom;
-			this._yscale = zoom;
-		}
-		
-	}
-	else{
-		var room_num = area[3];
-		var name = area[4];
-		var room_name = area[5];
-		var x;
-		var y;
-		if(area[6] == 'r'){
-			var x1 = area[7];
-			var y1 = area[8];
-			var x2 = area[9];
-			var y2 = area[10];
-			x = (x1 + x2) / 2;
-			y = (y1 + y2) / 2;
-			map_add(floors[floor - 1], 'r', x1, y1, x2, y2, 0.5, color);
-		}
-		else if(area[6] == 'd'){
-			x = area[7];
-			y = area[8];
-			var offset = 9;
-			while (offset < area.length){
-				var type = area[offset];
-				if(type == 'c'){
-					var x = area[offset + 1];
-					var y = area[offset + 2];
-					var r = area[offset + 3];
-					var from = area[offset + 4] / 180 * Math.PI;
-					var to = area[offset + 5] / 180 * Math.PI;
-					drawCircle(floors[floor - 1], x, y, r, from, to, (color == 0x000000) ? 1 : 0, LColor, (color == 0x000000) ? 100 : 0, color, (color == 0x000000) ? 0 : 100);
-					offset += 6;
-					continue;
-				}
-				var x1 = area[offset + 1];
-				var y1 = area[offset + 2];
-				var x2 = area[offset + 3];
-				var y2 = area[offset + 4];
-				offset += map_add(floors[floor - 1], type, x1, y1, x2, y2, 0.5, color);
-			}
-		}
-		var new_mc = floors[floor - 1].createEmptyMovieClip(name, room_num);
-		textBox(new_mc, room_name, x, y, false);
-	}
-	if (areas.length == 0){
-		loaded = true;
+	if(areas.length == 0){
 		Paused = false;
 		this.onEnterFrame = null;
+		return;
+	}
+	var area:Array = areas.pop().split("\\n").join('\n').split(',');
+	var floor:Number = Number(area[0]);
+	var color:Number = parseInt(area[1], 16);
+	var thre:Number = Number(area[2]);
+	var canPiece:Boolean = thre >= 0;
+	var isPiece:Boolean = canPiece && thre <= Difficulty;
+	var divideFillAndStroke = area.length == 10;
+	var roomNumber:Number;
+	var roomNameEN:String;
+	var roomNameJP:String;
+	var X:Number;
+	var Y:Number;
+	var d:String;
+	var d2:String;
+	if (canPiece){
+		roomNumber = Number(area[3]);
+		roomNameEN = area[4];
+		roomNameJP = area[5];
+		X = Number(area[6]);
+		Y = Number(area[7]);
+		d = area[8];
+		if (divideFillAndStroke){
+			d2 = area[9];
+		}
+	}
+	else{
+		d = area[3];
+	}
+	if (color == 0 && !canPiece) color = -1;
+	else{
+		if(Difficulty == 3){
+			if(DarkMode){
+				color = 0x000000;
+			}
+			else{
+				color = 0xFFFFFF;
+			}
+		}
+		else if(DarkMode){
+			var r:Number = (color >> 16) & 0xFF;
+			var g:Number = (color >>  8) & 0xFF;
+			var b:Number = (color >>  0) & 0xFF;
+			r = Math.max(r - 96, 0);
+			g = Math.max(g - 96, 0);
+			b = Math.max(b - 96, 0);
+			color = (r << 16) | (g << 8) | b;
+		}
+	}
+	draw_d(floors[floor - 1], d, 0, 0, canPiece ? 1 : color == -1 ? 1 : 0, color);
+	if (divideFillAndStroke) draw_d(floors[floor - 1], d2, 0, 0, 1, -1);
+	if (!isPiece && canPiece){
+		var new_mc:MovieClip = floors[floor - 1].createEmptyMovieClip(roomNameEN, roomNumber);
+		textBox(new_mc, roomNameJP, X, Y, false);
+	}
+	nowfloor = floor;
+	if (!isPiece) return;
+	rooms ++;
+	rooms_floor[floor - 1] ++;
+	var mc:MovieClip = this.createEmptyMovieClip(roomNameEN, roomNumber);
+	mc._xscale = zoom;
+	mc._yscale = zoom;
+	mc._x = Width / 3 * 2 + ((Width / 3 - 50) * Math.random()) + 25;
+	mc._y = (Height / 7 * 6 - 50) * Math.random() + 25;
+	mc.to_x = X;
+	mc.to_y = Y;
+	mc.floor = floor;
+	mc.nameEN = roomNameEN;
+	mc.nameJP = roomNameJP;
+	mc.num = roomNumber;
+	draw_d(mc, d, X, Y, 2, color);
+	if (divideFillAndStroke) draw_d(mc, d2, X, Y, 1, -1);
+	textBox(mc, roomNameJP, 0, 0, false);
+	mc.onPress = function(){
+		if(!Paused){
+			this.startDrag (false);
+			this.swapDepths(3000);
+		}
+	};
+	mc.onRelease = function(){
+		stopDrag ();
+		var dx:Number = (this._x - allfloors._x) * 100 / zoom - this.to_x;
+		var dy:Number = (this._y - allfloors._y) * 100 / zoom - this.to_y;
+		if (this.floor == nowfloor && dx * dx + dy * dy < 2500){
+			Data.koteltu.start();
+			this._x = this.to_x;
+			this._y = this.to_y;
+			this.onPress = null;
+			this.onRelease = null;
+			this.onEnterFrame = null;
+			complete ++;
+			complete_floor[this.floor - 1] ++;
+			var new_mc:MovieClip = floors[this.floor - 1].createEmptyMovieClip(this.nameEN, this.num);
+			textBox(new_mc, this.nameJP, this.to_x, this.to_y, false);
+			this.removeMovieClip();
+		}
+	};
+	mc.onEnterFrame = function(){
+		if(Difficulty == 3){
+			this._visible = true;
+		}
+		else if(nowfloor != this.floor){
+			this._visible = false;
+		}
+		else{
+			this._visible = true;
+		}
+		this._xscale = zoom;
+		this._yscale = zoom;
 	}
 }
+
 
 drawRect(goresult, Width / 12 * 11, Height / 7 * 6, Width / 12, Height / 7, 1, LColor, FColor);
 textBox(goresult, "進ﾑ", Width / 24 * 23, Height / 14 * 13, false);

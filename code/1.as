@@ -88,15 +88,8 @@ function drawCircle(
 	y0:Number,
 	radius:Number,
 	from:Number,
-	to:Number,
-	line_width:Number,
-	line_color:Number,
-	line_alpha:Number,
-	fill_color:Number,
-	fill_alpha:Number
+	to:Number
 ){
-	parent.lineStyle(line_width, line_color, line_alpha);
-	parent.beginFill(fill_color, fill_alpha);
 	parent.moveTo(x0 + Math.cos(from) * radius, y0 + Math.sin(from) * radius);
 	while(from < to){
 		var x2 = Math.cos(from) * radius;
