@@ -455,6 +455,6 @@ goresult.onPress = function(){
 	play();
 	this.removeMovieClip();
 };
-goresult._visible = true;
+goresult._visible = false;
 
 stop();
