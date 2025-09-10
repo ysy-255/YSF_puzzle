@@ -2,6 +2,9 @@
 
 var areas:Array = Data.map.split('\n');
 
+var mapPadX:Number = 379;
+var mapPadY:Number = 228;
+
 
 rooms = 0;
 complete = 0; // マップ完成率 = complete / rooms
@@ -130,32 +133,37 @@ for (var _i in floor_switch){
 }
 
 
-allfloors._x = Width / 6;
-allfloors._y = Height / 36;
-allfloors.onPress = function(){
-	if(Paused){
-		// うごかすもんか！
-	}
-	else{
-		this.startDrag (false);
-	}
-};
+allfloors._x = Width / 6 + (-mapPadX) * zoom / 100;
+allfloors._y = (-mapPadY) * zoom / 100;
 allfloors.onEnterFrame = function(){
 	this._xscale = zoom;
 	this._yscale = zoom;
-	if(this._width < Width / 3 * 2){
-		this._x = this._x - (this._x - Math.min(Math.max(this._x, Width / 12), Width / 12 * 9 - this._width)) / 10;
+	var X:Number = this._x;
+	var Y:Number = this._y;
+	var W:Number = this._width;
+	var H:Number = this._height;
+	if(W < Width / 3 * 2){
+		this._x = X - (X - Math.min(Math.max(X, Width / 12), Width / 12 * 9 - W)) / 10;
 	}
 	else{
-		this._x = this._x - (this._x - Math.max(Math.min(this._x, Width / 12), Width / 12 * 9 - this._width)) / 10;
+		this._x = X - (X - Math.max(Math.min(X, Width / 12), Width / 12 * 9 - W)) / 10;
 	}
-	if(this._height < Height){
-		this._y = this._y - (this._y - Math.min(Math.max(this._y, 0), Height - this._height)) / 10;
+	if(H < Height){
+		this._y = Y - (Y - Math.min(Math.max(Y, 0), Height - H)) / 10;
 	}
 	else{
-		this._y = this._y - (this._y - Math.max(Math.min(this._y, 0), Height - this._height)) / 10;
+		this._y = Y - (Y - Math.max(Math.min(Y, 0), Height - H)) / 10;
 	}
 };
+
+var map_bg:MovieClip = allfloors.createEmptyMovieClip("bg", 200);
+var mcLoader:MovieClipLoader = new MovieClipLoader();
+mcLoader.loadClip("./data/surroundings875.png", map_bg);
+map_bg._xscale = 200;
+map_bg._yscale = 200;
+map_bg._x = 0;
+map_bg._y = 0;
+map_bg._alpha = 50;
 
 var floors:Array = [0, 0, 0, 0, 0, 0];
 for (var _i in floors){
@@ -163,6 +171,8 @@ for (var _i in floors){
 	var floor:Number = i + 1;
 	floors[i] = allfloors.createEmptyMovieClip("floor_" + floor, 200 + floor);
 	floors[i].floor = floor;
+	floors[i]._x = mapPadX;
+	floors[i]._y = mapPadY;
 	floors[i].onEnterFrame = function(){
 		if(nowfloor != this.floor){
 			this._visible = false;
@@ -171,6 +181,9 @@ for (var _i in floors){
 			this._visible = true;
 		}
 	};
+	floors[i].onPress = function(){
+		allfloors.startDrag (false);
+	}
 }
 
 
@@ -393,8 +406,8 @@ allrooms.onEnterFrame = function(){
 	};
 	mc.onRelease = function(){
 		stopDrag ();
-		var dx:Number = (this._x - allfloors._x) * 100 / zoom - this.to_x;
-		var dy:Number = (this._y - allfloors._y) * 100 / zoom - this.to_y;
+		var dx:Number = (this._x - allfloors._x) * 100 / zoom - this.to_x - mapPadX;
+		var dy:Number = (this._y - allfloors._y) * 100 / zoom - this.to_y - mapPadY;
 		if (this.floor == nowfloor && dx * dx + dy * dy < 2500){
 			Data.koteltu.start();
 			this._x = this.to_x;
