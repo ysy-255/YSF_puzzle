@@ -324,6 +324,18 @@ allrooms.onEnterFrame = function(){
 	if(areas.length == 0){
 		Paused = false;
 		this.onEnterFrame = null;
+		for (var i in floor_switch){
+			floor_switch[i].onEnterFrame = function(){
+				var num:Number = complete_floor[this.floor - 1];
+				var den:Number = rooms_floor[this.floor - 1];
+				this.clear();
+				var completed:Boolean = num == den;
+				var fillcolor:Number = completed ? 0x50FF50 : FColor;
+				drawRect(this, 0.5, 0, Width / 12 - 0.5, Height / (this.floor == 6 ? 14 : 7), 0.5, LColor, fillcolor);
+				if (completed) return;		
+				drawRect(this, 0.5, Height / (this.floor == 6 ? 14 : 7) * (1 - num / den), Width / 12 - 0.5, Height / (this.floor == 6 ? 14 : 7) * num / den, 0, LColor, 0xB0FFB0);
+			}
+		}
 		return;
 	}
 	var area:Array = areas.pop().split("\\n").join('\n').split(',');
