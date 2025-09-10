@@ -100,6 +100,8 @@ register.onPress = function(){
 			s_obj.flush();
 			rank.loaded = false;
 			current_diff = Difficulty;
+			rank_tf.removeTextField();
+			rank_tf = textBox(rank, "Registering...", Width / 2, Height / 2, false);
 		});
 	}
 };
@@ -117,7 +119,6 @@ rank.onEnterFrame = function(){
 			return;
 		}
 		this.data = [[], [], [], [], [], []];
-		rank_tf._visible = false;
 		var offset:Number = 0;
 		var src:String = this.rawData;
 		while(offset < src.length){
